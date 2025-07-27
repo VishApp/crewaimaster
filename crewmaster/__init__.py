@@ -1,0 +1,34 @@
+"""
+CrewMaster: A Python package for building intelligent multi-agent systems using CrewAI.
+
+This package provides a CLI and framework for automatically generating, managing,
+and executing multi-agent crews based on natural language tasks.
+"""
+
+import warnings
+import os
+
+# Suppress common deprecation warnings globally
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", message=".*Pydantic.*deprecated.*")
+warnings.filterwarnings("ignore", message=".*PydanticDeprecatedSince20.*")
+warnings.filterwarnings("ignore", message=".*extra keyword arguments.*")
+warnings.filterwarnings("ignore", message=".*Field.*deprecated.*")
+warnings.filterwarnings("ignore", message=".*event loop.*")
+
+# Set environment variable
+os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
+
+__version__ = "0.1.0"
+__author__ = "CrewMaster Team"
+__email__ = "team@crewmaster.dev"
+
+from .core.master_agent import MasterAgent
+from .core.crew_designer import CrewDesigner
+from .core.task_analyzer import TaskAnalyzer
+
+__all__ = [
+    "MasterAgent",
+    "CrewDesigner", 
+    "TaskAnalyzer",
+]

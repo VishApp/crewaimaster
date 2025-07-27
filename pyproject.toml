@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crewmaster"
+version = "0.1.0"
+description = "A Python package for building intelligent multi-agent systems using CrewAI"
+readme = "README.md"
+authors = [
+    {name = "CrewMaster Team", email = "team@crewmaster.dev"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+keywords = ["ai", "multi-agent", "crewai", "automation", "agents"]
+requires-python = ">=3.9"
+dependencies = [
+    "crewai",
+    "crewai[tools]",
+    "click>=8.0.0",
+    "pydantic>=2.0.0",
+    "sqlalchemy>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+    "httpx>=0.25.0",
+    "openai>=1.0.0",
+    "faiss-cpu>=1.7.0",
+    "sentence-transformers>=2.2.0",
+    "duckduckgo-search",
+    "langchain-community",
+    "firecrawl-py>=2.16.2",
+    "pyyaml>=6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+web = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "jinja2>=3.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/crewmaster"
+Documentation = "https://crewmaster.readthedocs.io"
+Repository = "https://github.com/yourusername/crewmaster"
+Issues = "https://github.com/yourusername/crewmaster/issues"
+
+[project.scripts]
+crewmaster = "crewmaster.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["crewmaster*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "COM", "C4", "DTZ", "T10", "EM", "EXE", "ISC", "ICN", "G", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "INT", "ARG", "PTH", "PD", "PGH", "PL", "TRY", "NPY", "RUF"]
+ignore = ["S101", "S104", "S105", "S106", "S107", "S108", "COM812", "ISC001"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
