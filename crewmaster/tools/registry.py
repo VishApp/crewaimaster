@@ -801,6 +801,8 @@ class ToolRegistry:
             'api_keys': {
                 'serper_dev': os.getenv('SERPER_API_KEY'),
                 'openai': os.getenv('OPENAI_API_KEY'),
+                'anthropic': os.getenv('ANTHROPIC_API_KEY'),
+                'google': os.getenv('GOOGLE_API_KEY'),
                 'firecrawl': os.getenv('FIRECRAWL_API_KEY'),
                 'browserbase': os.getenv('BROWSERBASE_API_KEY'),
                 'github': os.getenv('GITHUB_TOKEN'),

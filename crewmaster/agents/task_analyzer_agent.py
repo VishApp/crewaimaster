@@ -8,6 +8,7 @@ and generate detailed crew specifications with intelligent reasoning.
 from typing import Dict, List, Any, Optional
 from crewai import Agent, Task, Crew
 from crewai.tools import BaseTool
+from crewai_tools import SerperDevTool
 from pydantic import BaseModel, Field
 from ..core.task_analyzer import TaskComplexity, AgentRole, TaskRequirement, AgentSpec, CrewSpec
 
@@ -23,18 +24,6 @@ class TaskAnalysisResult(BaseModel):
     agent_specifications: List[Dict[str, Any]] = Field(description="Detailed agent specs")
 
 
-class TaskAnalysisTool(BaseTool):
-    """Tool for analyzing task descriptions."""
-    
-    name: str = "task_analysis_tool"
-    description: str = "Analyze a task description and provide detailed specifications"
-    
-    def _run(self, task_description: str) -> str:
-        """Analyze the task and return structured analysis."""
-        # This would be implemented with the logic from TaskAnalyzer
-        # For now, return a placeholder
-        return f"Analysis of: {task_description}"
-
 
 class TaskAnalyzerAgent:
     """AI-powered task analyzer using CrewAI."""
@@ -44,10 +33,10 @@ class TaskAnalyzerAgent:
         self.llm_config = llm_config or {}
         
         # Create the analysis agent
-        self.analyzer_agent = Agent(
-            role="Task Analysis Specialist",
-            goal="Analyze natural language task descriptions and determine the optimal crew structure, agent roles, and tools needed for successful execution",
-            backstory="""You are an expert AI task analyzer with deep understanding of multi-agent systems, 
+        agent_kwargs = {
+            "role": "Task Analysis Specialist",
+            "goal": "Analyze natural language task descriptions and determine the optimal crew structure, agent roles, and tools needed for successful execution",
+            "backstory": """You are an expert AI task analyzer with deep understanding of multi-agent systems, 
             workflow orchestration, and task decomposition. You excel at breaking down complex requests into 
             actionable components and determining the most efficient agent configuration for any given task.
             
@@ -58,17 +47,23 @@ class TaskAnalyzerAgent:
             - Estimating execution time and process flow
             - Ensuring efficient coordination between agents
             """,
-            verbose=True,
-            allow_delegation=False,
-            tools=[TaskAnalysisTool()],
-            max_iter=3
-        )
+            "verbose": True,
+            "allow_delegation": False,
+            "tools": [],
+            "max_iter": 3
+        }
+        
+        # Add LLM configuration if provided
+        if self.llm_config:
+            agent_kwargs["llm"] = self._create_llm_instance()
+            
+        self.analyzer_agent = Agent(**agent_kwargs)
         
         # Create the specification generator agent
-        self.spec_agent = Agent(
-            role="Agent Specification Designer",
-            goal="Create detailed agent specifications based on task analysis including goals, backstories, and tool assignments",
-            backstory="""You are a specialist in designing AI agents with the perfect balance of capabilities, 
+        spec_kwargs = {
+            "role": "Agent Specification Designer",
+            "goal":"Create detailed agent specifications based on task analysis including goals, backstories, and tool assignments",
+            "backstory":"""You are a specialist in designing AI agents with the perfect balance of capabilities, 
             personality, and tool access. You understand how to craft compelling agent personas that work 
             effectively in team environments while maintaining their individual expertise areas.
             
@@ -79,10 +74,42 @@ class TaskAnalyzerAgent:
             - Ensuring proper agent coordination and delegation
             - Balancing specialization with collaboration
             """,
-            verbose=True,
-            allow_delegation=False,
-            max_iter=3
-        )
+            "verbose": True,
+            "allow_delegation": False,
+            "max_iter": 3
+        }
+
+        # Add LLM configuration if provided
+        if self.llm_config:
+            spec_kwargs["llm"] = self._create_llm_instance()
+            
+        self.spec_agent = Agent(**spec_kwargs)
+    
+    def _create_llm_instance(self):
+        """Create LLM instance using CrewAI's LLM class."""
+        try:
+            from crewai import LLM
+            provider = self.llm_config.get("provider", "openai")
+            
+            if provider == "custom":
+                # For custom providers, specify all parameters
+                return LLM(
+                    model=self.llm_config.get("model", "gpt-4"),
+                    api_key=self.llm_config.get("api_key"),
+                    base_url=self.llm_config.get("base_url"),
+                    temperature=self.llm_config.get("temperature", 0.7),
+                    max_tokens=self.llm_config.get("max_tokens", 2000)
+                )
+            else:
+                # For standard providers, let CrewAI auto-detect from env vars
+                return LLM(
+                    model=self.llm_config.get("model", "gpt-4"),
+                    temperature=self.llm_config.get("temperature", 0.7),
+                    max_tokens=self.llm_config.get("max_tokens", 2000)
+                )
+        except Exception as e:
+            print(f"Warning: Could not create LLM instance: {e}")
+            return None
     
     def _normalize_task_description(self, task_description: str) -> str:
         """
@@ -209,7 +236,7 @@ class TaskAnalyzerAgent:
             - For development tasks: agents should build and return working solutions
             - Goals should be action-oriented: "Monitor prices and return data" not "Create a strategy for monitoring"
             - Expected output should be actual results: "Price data collected" not "Plan for price monitoring"
-            - Tools should be selected from: web_search, web_scraping, document_search, github_search, youtube_search, vision, database_search, browser_automation, code_execution, file_operations, data_processing, api_calls
+            - Tools should be selected from actual CrewAI tools: SerperDevTool, FileReadTool, ScrapeWebsiteTool, GithubSearchTool, YoutubeVideoSearchTool, YoutubeChannelSearchTool, CodeInterpreterTool, PDFSearchTool, DOCXSearchTool, CSVSearchTool, JSONSearchTool, XMLSearchTool, TXTSearchTool, MDXSearchTool, DirectoryReadTool, DirectorySearchTool, PGSearchTool, BrowserbaseLoadTool, FirecrawlScrapeWebsiteTool, WebsiteSearchTool, EXASearchTool
             - Agent names should reflect doers, not planners
             - Backstories should emphasize hands-on execution experience
             """,
@@ -309,6 +336,75 @@ class TaskAnalyzerAgent:
         else:
             return TaskComplexity.SIMPLE
     
+    def _parse_json_from_text(self, text: str) -> dict:
+        """Robust JSON parsing from AI-generated text."""
+        import re
+        import json
+        
+        # Try multiple extraction methods
+        json_data = None
+        
+        # Method 1: Look for JSON wrapped in ```json blocks
+        json_match = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
+        if json_match:
+            try:
+                json_data = json.loads(json_match.group(1))
+            except json.JSONDecodeError:
+                pass
+        
+        # Method 2: Look for any JSON block with agentSpecifications
+        if not json_data:
+            # Use a more flexible pattern that can handle nested braces
+            brace_count = 0
+            start_pos = text.find('{')
+            if start_pos != -1:
+                for i, char in enumerate(text[start_pos:], start_pos):
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            potential_json = text[start_pos:i+1]
+                            if 'agentSpecifications' in potential_json:
+                                try:
+                                    json_data = json.loads(potential_json)
+                                    break
+                                except json.JSONDecodeError:
+                                    # Try to fix common issues
+                                    fixed_json = self._fix_common_json_issues(potential_json)
+                                    try:
+                                        json_data = json.loads(fixed_json)
+                                        break
+                                    except json.JSONDecodeError:
+                                        continue
+        
+        # Method 3: Try parsing the entire text as JSON
+        if not json_data:
+            try:
+                text_stripped = text.strip()
+                if text_stripped.startswith('{') and text_stripped.endswith('}'):
+                    json_data = json.loads(text_stripped)
+            except json.JSONDecodeError:
+                pass
+        
+        return json_data
+    
+    def _fix_common_json_issues(self, json_str: str) -> str:
+        """Fix common JSON formatting issues in AI responses."""
+        import re
+        
+        # Remove trailing commas
+        json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+        
+        # Fix unquoted property names (but be careful not to break quoted strings)
+        # This is a simple fix - a full solution would need proper parsing
+        json_str = re.sub(r'([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\1"\2":', json_str)
+        
+        # Fix single quotes to double quotes (but be careful with contractions)
+        json_str = re.sub(r"'([^']*)'", r'"\1"', json_str)
+        
+        return json_str
+
     def _extract_roles_from_analysis(self, analysis: str) -> List[str]:
         """Extract agent roles from AI analysis."""
         import re
@@ -316,25 +412,27 @@ class TaskAnalyzerAgent:
         
         # Try to parse JSON from AI analysis first
         try:
-            # Look for JSON in the analysis result
-            json_match = re.search(r'```json\s*(\{.*?\})\s*```', analysis, re.DOTALL)
-            if json_match:
-                json_data = json.loads(json_match.group(1))
-                if 'agentSpecifications' in json_data:
-                    roles = []
-                    for agent in json_data['agentSpecifications']:
-                        if 'role' in agent:
-                            # Extract role and clean it up
-                            role = agent['role'].lower()
-                            # Convert "Data Collection Agent" -> "data_collector"
-                            clean_role = re.sub(r'\s+agent$', '', role)  # Remove " agent" suffix
-                            clean_role = re.sub(r'[^a-z0-9]+', '_', clean_role)  # Replace spaces/special chars
-                            clean_role = clean_role.strip('_')  # Remove leading/trailing underscores
-                            if clean_role not in roles:
-                                roles.append(clean_role)
-                    if roles:
-                        return roles[:5]  # Limit to 5 agents max
-        except (json.JSONDecodeError, KeyError):
+            json_data = self._parse_json_from_text(analysis)
+            
+            if json_data and 'agentSpecifications' in json_data:
+                roles = []
+                print(f"🔧 DEBUG: Found {len(json_data['agentSpecifications'])} agent specifications in JSON")
+                for i, agent in enumerate(json_data['agentSpecifications']):
+                    if 'role' in agent:
+                        # Extract role and clean it up
+                        role = agent['role'].lower()
+                        # Convert "Data Collection Agent" -> "data_collector"
+                        clean_role = re.sub(r'\s+agent$', '', role)  # Remove " agent" suffix
+                        clean_role = re.sub(r'[^a-z0-9]+', '_', clean_role)  # Replace spaces/special chars
+                        clean_role = clean_role.strip('_')  # Remove leading/trailing underscores
+                        print(f"🔧 DEBUG: Agent {i+1}: {agent.get('role', 'Unknown')} -> {clean_role}")
+                        if clean_role not in roles:
+                            roles.append(clean_role)
+                if roles:
+                    print(f"🔧 DEBUG: Extracted {len(roles)} roles from JSON: {roles}")
+                    return roles[:5]  # Limit to 5 agents max
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"🔧 DEBUG: JSON parsing failed: {e}")
             pass
         
         # Fallback to pattern-based extraction
@@ -622,68 +720,89 @@ class TaskAnalyzerAgent:
         import json
         
         try:
-            # Look for JSON in the analysis result
-            json_match = re.search(r'```json\s*(\{.*?\})\s*```', analysis, re.DOTALL)
-            if json_match:
-                json_data = json.loads(json_match.group(1))
-                if 'agentSpecifications' in json_data:
-                    agent_specs = []
-                    for agent in json_data['agentSpecifications']:
-                        spec = {
-                            'name': agent.get('agentName', ''),
-                            'goal': agent.get('goal', ''),
-                            'backstory': agent.get('backstory', ''),
-                            'tools': self._convert_ai_tools_to_crewmaster_tools(agent.get('tools', []))
-                        }
-                        agent_specs.append(spec)
-                    return agent_specs
-        except (json.JSONDecodeError, KeyError):
+            # Use the robust JSON parser
+            json_data = self._parse_json_from_text(analysis)
+            
+            if json_data and 'agentSpecifications' in json_data:
+                agent_specs = []
+                print(f"🔧 DEBUG: Extracting {len(json_data['agentSpecifications'])} agent specs from JSON")
+                for i, agent in enumerate(json_data['agentSpecifications']):
+                    spec = {
+                        'name': agent.get('agentName', ''),
+                        'goal': agent.get('goal', ''),
+                        'backstory': agent.get('backstory', ''),
+                        'tools': self._convert_ai_tools_to_crewmaster_tools(agent.get('tools', []))
+                    }
+                    print(f"🔧 DEBUG: Agent spec {i+1}: {spec['name']} ({agent.get('role', 'Unknown role')})")
+                    agent_specs.append(spec)
+                return agent_specs
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"🔧 DEBUG: Agent spec extraction failed: {e}")
             pass
         
         return []
     
     def _convert_ai_tools_to_crewmaster_tools(self, ai_tools: List[str]) -> List[str]:
-        """Convert AI-suggested tools to CrewMaster tool names."""
-        # Valid CrewMaster tools
-        valid_tools = {
-            'web_search', 'web_scraping', 'document_search', 'github_search', 
-            'youtube_search', 'vision', 'database_search', 'browser_automation',
-            'code_execution', 'file_operations', 'data_processing', 'api_calls'
+        """Convert AI-suggested tools to actual CrewAI tool names."""
+        # Valid CrewAI tools (exact names from CrewAI documentation)
+        valid_crewai_tools = {
+            'SerperDevTool', 'FileReadTool', 'ScrapeWebsiteTool', 'GithubSearchTool', 
+            'YoutubeVideoSearchTool', 'YoutubeChannelSearchTool', 'CodeInterpreterTool',
+            'PDFSearchTool', 'DOCXSearchTool', 'CSVSearchTool', 'JSONSearchTool', 
+            'XMLSearchTool', 'TXTSearchTool', 'MDXSearchTool', 'DirectoryReadTool', 
+            'DirectorySearchTool', 'PGSearchTool', 'BrowserbaseLoadTool', 
+            'FirecrawlScrapeWebsiteTool', 'WebsiteSearchTool', 'EXASearchTool',
+            'ApifyActorsTool', 'ComposioTool', 'CodeDocsSearchTool', 'RagTool'
         }
         
-        # External tool mapping for when AI suggests external tools
+        # Tool mapping for common aliases to actual CrewAI tools
         tool_mapping = {
-            'beautifulsoup': 'web_scraping',
-            'scrapy': 'web_scraping', 
-            'python': 'code_execution',
-            'csv': 'file_operations',
-            'json': 'file_operations',
-            'sqlite': 'database_search',
-            'twilio': 'api_calls',
-            'smtp': 'api_calls',
-            'pandas': 'data_processing',
-            'matplotlib': 'data_processing',
-            'trello': 'api_calls',
-            'asana': 'api_calls'
+            'web_search': 'SerperDevTool',
+            'file_operations': 'FileReadTool', 
+            'web_scraping': 'ScrapeWebsiteTool',
+            'github_search': 'GithubSearchTool',
+            'youtube_search': 'YoutubeVideoSearchTool',
+            'code_execution': 'CodeInterpreterTool',
+            'document_search': 'ScrapeWebsiteTool',  # Changed: For research tasks, prioritize web scraping over file search
+            'csv': 'CSVSearchTool',
+            'json': 'JSONSearchTool',
+            'pdf': 'PDFSearchTool',
+            'docx': 'DOCXSearchTool',
+            'txt': 'TXTSearchTool',
+            'xml': 'XMLSearchTool',
+            'markdown': 'MDXSearchTool',
+            'database': 'PGSearchTool',
+            'postgres': 'PGSearchTool',
+            'browser': 'BrowserbaseLoadTool',
+            'website_search': 'WebsiteSearchTool',
+            'firecrawl': 'FirecrawlScrapeWebsiteTool',
+            'beautifulsoup': 'ScrapeWebsiteTool',
+            'scrapy': 'ScrapeWebsiteTool', 
+            'python': 'CodeInterpreterTool',
+            'sqlite': 'PGSearchTool',
+            'data_processing': 'CodeInterpreterTool',
+            'browser_automation': 'BrowserbaseLoadTool',
+            'api_calls': 'SerperDevTool',
+            'vision': 'SerperDevTool'
         }
         
         converted_tools = []
         for tool in ai_tools:
             tool_lower = tool.lower()
             
-            # If it's already a valid CrewMaster tool, use it directly
-            if tool_lower in valid_tools:
-                if tool_lower not in converted_tools:
-                    converted_tools.append(tool_lower)
-            # Otherwise, try to map it
+            # If it's already a valid CrewAI tool name, use it directly
+            if tool in valid_crewai_tools:
+                if tool not in converted_tools:
+                    converted_tools.append(tool)
+            # Otherwise, try to map it to a CrewAI tool
             else:
-                mapped_tool = tool_mapping.get(tool_lower, 'web_search')
+                mapped_tool = tool_mapping.get(tool_lower, 'SerperDevTool')
                 if mapped_tool not in converted_tools:
                     converted_tools.append(mapped_tool)
         
-        # Ensure we have at least web_search
+        # Ensure we have at least SerperDevTool for web search
         if not converted_tools:
-            converted_tools = ['web_search']
+            converted_tools = ['SerperDevTool']
             
         return converted_tools[:4]  # Limit to 4 tools
     

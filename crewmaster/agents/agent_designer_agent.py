@@ -64,10 +64,10 @@ class AgentDesignerAgent:
         self.llm_config = llm_config or {}
         
         # Create a single, comprehensive agent designer for maximum efficiency
-        self.designer_agent = Agent(
-            role="Comprehensive Agent Designer",
-            goal="Design complete, optimized agent specifications with compelling personalities, optimal tool selection, and perfect team integration in a single efficient process",
-            backstory="""You are an expert AI agent architect with comprehensive knowledge spanning:
+        agent_kwargs = {
+            "role": "Comprehensive Agent Designer",
+            "goal": "Design complete, optimized agent specifications with compelling personalities, optimal tool selection, and perfect team integration in a single efficient process",
+            "backstory": """You are an expert AI agent architect with comprehensive knowledge spanning:
 
             🎭 PERSONALITY DESIGN EXPERTISE:
             - Crafting authentic, memorable agent personas with unique backstories
@@ -90,10 +90,42 @@ class AgentDesignerAgent:
             You excel at creating agents that are technically optimal, personality-rich, and perfectly integrated
             for team collaboration - all in a single, streamlined design process.
             """,
-            verbose=False,  # Disabled for speed
-            allow_delegation=False,
-            max_iter=2  # Reduced for efficiency
-        )
+            "verbose": False,  # Disabled for speed
+            "allow_delegation": False,
+            "max_iter": 2  # Reduced for efficiency
+        }
+        
+        # Add LLM configuration if provided
+        if self.llm_config:
+            agent_kwargs["llm"] = self._create_llm_instance()
+            
+        self.designer_agent = Agent(**agent_kwargs)
+    
+    def _create_llm_instance(self):
+        """Create LLM instance using CrewAI's LLM class."""
+        try:
+            from crewai import LLM
+            provider = self.llm_config.get("provider", "openai")
+            
+            if provider == "custom":
+                # For custom providers, specify all parameters
+                return LLM(
+                    model=self.llm_config.get("model", "gpt-4"),
+                    api_key=self.llm_config.get("api_key"),
+                    base_url=self.llm_config.get("base_url"),
+                    temperature=self.llm_config.get("temperature", 0.7),
+                    max_tokens=self.llm_config.get("max_tokens", 2000)
+                )
+            else:
+                # For standard providers, let CrewAI auto-detect from env vars
+                return LLM(
+                    model=self.llm_config.get("model", "gpt-4"),
+                    temperature=self.llm_config.get("temperature", 0.7),
+                    max_tokens=self.llm_config.get("max_tokens", 2000)
+                )
+        except Exception as e:
+            print(f"Warning: Could not create LLM instance: {e}")
+            return None
     
     def design_agent(self, design_request: AgentDesignRequest) -> AgentDesignResult:
         """
@@ -148,7 +180,7 @@ class AgentDesignerAgent:
             - Ensure diversity and authenticity in character development
             
             🔧 TECHNICAL OPTIMIZATION:
-            - Select 2-4 most appropriate tools from: web_search, web_scraping, document_search, github_search, youtube_search, vision, database_search, browser_automation, code_execution, file_operations, data_processing, api_calls
+            - Select 2-4 most appropriate tools from: SerperDevTool, FileReadTool, ScrapeWebsiteTool, GithubSearchTool, YoutubeVideoSearchTool, YoutubeChannelSearchTool, CodeInterpreterTool, PDFSearchTool, DOCXSearchTool, CSVSearchTool, JSONSearchTool, XMLSearchTool, TXTSearchTool, MDXSearchTool, DirectoryReadTool, DirectorySearchTool, PGSearchTool, BrowserbaseLoadTool, FirecrawlScrapeWebsiteTool, WebsiteSearchTool, EXASearchTool
             - Match tools precisely to role requirements and task context
             - Optimize memory type based on task duration and complexity
             - Set appropriate iteration limits for efficiency
@@ -266,38 +298,58 @@ class AgentDesignerAgent:
         )
     
     def _convert_ai_tools_to_crewmaster_tools(self, ai_tools: List[str]) -> List[str]:
-        """Convert AI-suggested tools to CrewMaster tool names."""
+        """Convert AI-suggested tools to actual CrewAI tool names."""
+        # Valid CrewAI tools (exact names from CrewAI documentation)
+        valid_crewai_tools = {
+            'SerperDevTool', 'FileReadTool', 'ScrapeWebsiteTool', 'GithubSearchTool', 
+            'YoutubeVideoSearchTool', 'YoutubeChannelSearchTool', 'CodeInterpreterTool',
+            'PDFSearchTool', 'DOCXSearchTool', 'CSVSearchTool', 'JSONSearchTool', 
+            'XMLSearchTool', 'TXTSearchTool', 'MDXSearchTool', 'DirectoryReadTool', 
+            'DirectorySearchTool', 'PGSearchTool', 'BrowserbaseLoadTool', 
+            'FirecrawlScrapeWebsiteTool', 'WebsiteSearchTool', 'EXASearchTool',
+            'ApifyActorsTool', 'ComposioTool', 'CodeDocsSearchTool', 'RagTool'
+        }
+        
+        # Tool mapping for common aliases to actual CrewAI tools
         tool_mapping = {
-            'beautifulsoup': 'web_scraping',
-            'scrapy': 'web_scraping', 
-            'python': 'code_execution',
-            'csv': 'file_operations',
-            'json': 'file_operations',
-            'sqlite': 'database_search',
-            'twilio': 'api_calls',
-            'smtp': 'api_calls',
-            'pandas': 'data_processing',
-            'matplotlib': 'data_processing',
-            'trello': 'api_calls',
-            'asana': 'api_calls'
+            'web_search': 'SerperDevTool',
+            'file_operations': 'FileReadTool', 
+            'web_scraping': 'ScrapeWebsiteTool',
+            'github_search': 'GithubSearchTool',
+            'youtube_search': 'YoutubeVideoSearchTool',
+            'code_execution': 'CodeInterpreterTool',
+            'document_search': 'ScrapeWebsiteTool',  # Changed: For research tasks, prioritize web scraping over file search
+            'csv': 'CSVSearchTool',
+            'json': 'JSONSearchTool',
+            'pdf': 'PDFSearchTool',
+            'docx': 'DOCXSearchTool',
+            'txt': 'TXTSearchTool',
+            'xml': 'XMLSearchTool',
+            'markdown': 'MDXSearchTool',
+            'database': 'PGSearchTool',
+            'postgres': 'PGSearchTool',
+            'browser': 'BrowserbaseLoadTool',
+            'website_search': 'WebsiteSearchTool',
+            'firecrawl': 'FirecrawlScrapeWebsiteTool'
         }
         
         converted_tools = []
         for tool in ai_tools:
             tool_lower = tool.lower()
-            mapped_tool = tool_mapping.get(tool_lower, tool_lower)
-            # Ensure tool is in the valid tool set
-            valid_tools = {
-                'web_search', 'web_scraping', 'document_search', 'github_search', 
-                'youtube_search', 'vision', 'database_search', 'browser_automation',
-                'code_execution', 'file_operations', 'data_processing', 'api_calls'
-            }
-            if mapped_tool in valid_tools and mapped_tool not in converted_tools:
-                converted_tools.append(mapped_tool)
+            
+            # If it's already a valid CrewAI tool name, use it directly
+            if tool in valid_crewai_tools:
+                if tool not in converted_tools:
+                    converted_tools.append(tool)
+            # Otherwise, try to map it to a CrewAI tool
+            else:
+                mapped_tool = tool_mapping.get(tool_lower, 'SerperDevTool')
+                if mapped_tool not in converted_tools:
+                    converted_tools.append(mapped_tool)
         
-        # Ensure we have at least web_search
+        # Ensure we have at least SerperDevTool for web search
         if not converted_tools:
-            converted_tools = ['web_search']
+            converted_tools = ['SerperDevTool']
             
         return converted_tools[:4]  # Limit to 4 tools
     

@@ -26,20 +26,15 @@ requires-python = ">=3.9"
 dependencies = [
     "crewai",
     "crewai[tools]",
-    "click>=8.0.0",
     "pydantic>=2.0.0",
-    "sqlalchemy>=2.0.0",
     "python-dotenv>=1.0.0",
     "rich>=13.0.0",
     "typer>=0.9.0",
-    "httpx>=0.25.0",
     "openai>=1.0.0",
-    "faiss-cpu>=1.7.0",
-    "sentence-transformers>=2.2.0",
-    "duckduckgo-search",
-    "langchain-community",
-    "firecrawl-py>=2.16.2",
     "pyyaml>=6.0.2",
+    "langchain-anthropic",
+    "langchain-google-genai",
+    "langchain-openai"
 ]
 
 [project.optional-dependencies]

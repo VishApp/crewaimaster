@@ -9,12 +9,11 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
 from .config import Config
-from ..database.database import Database, AgentRepository, CrewRepository, ExecutionLogRepository
-from ..database.models import CrewModel, AgentModel, ExecutionResult
+from .llm_provider import LLMProviderFactory, get_llm_config_for_crewai
 from ..agents.crew_orchestrator_agent import CrewOrchestratorAgent, CrewOrchestrationRequest
 from ..agents.task_analyzer_agent import TaskAnalyzerAgent
 from ..agents.agent_designer_agent import AgentDesignerAgent
-from .crew_designer import CrewDesigner
+from .crew_designer import CrewDesigner, CrewModel, AgentModel
 from .task_analyzer import CrewSpec
 
 
@@ -45,29 +44,26 @@ class MasterAgentCrew:
     def __init__(self, config: Config):
         """Initialize the master agent crew."""
         self.config = config
-        self.config.update_from_env()  # Load environment variables
+        # Environment variable loading is disabled - use .crewmaster/config.yaml only
         
-        # Initialize database
-        self.database = Database(self.config.database.url)
-        
-        # Initialize repositories
-        self.agent_repo = AgentRepository(self.database)
-        self.crew_repo = CrewRepository(self.database)
-        self.execution_repo = ExecutionLogRepository(self.database)
-        
-        # Initialize AI agents
-        llm_config = {
-            "model": self.config.llm.model,
-            "api_key": self.config.llm.api_key,
-            "base_url": getattr(self.config.llm, 'base_url', None)
-        }
+        # Initialize AI agents with provider-specific configuration
+        try:
+            llm_config = get_llm_config_for_crewai(self.config)
+        except ValueError as e:
+            # Fallback to OpenAI if provider is unsupported
+            print(f"Warning: {e}. Falling back to OpenAI configuration.")
+            llm_config = {
+                "model": self.config.llm.model,
+                "api_key": self.config.llm.api_key,
+                "base_url": getattr(self.config.llm, 'base_url', None)
+            }
         
         self.crew_orchestrator = CrewOrchestratorAgent(llm_config)
         self.task_analyzer = TaskAnalyzerAgent(llm_config)
         self.agent_designer = AgentDesignerAgent(llm_config)
         
-        # Keep the original crew designer for database operations
-        self.crew_designer = CrewDesigner(config, self.database)
+        # Initialize crew designer for file-based operations (no database needed)
+        self.crew_designer = CrewDesigner(config)
         
         # Track operation modes
         self._use_ai_agents = True  # Flag to enable/disable AI agent usage
@@ -124,6 +120,9 @@ class MasterAgentCrew:
             # Execute AI orchestration
             orchestration_result = self.crew_orchestrator.orchestrate_crew_creation(request)
             
+            # Debug the orchestration result
+            print(f"🔧 DEBUG: Orchestration result agents: {orchestration_result.crew_spec.get('agents', [])}")
+            
             if verbose:
                 print("📋 AI orchestration completed:")
                 print(f"   Crew: {orchestration_result.crew_spec['name']}")
@@ -145,6 +144,7 @@ class MasterAgentCrew:
             return crew_model
             
         except Exception as e:
+            print(f"🔧 DEBUG: AI orchestration failed: {str(e)}")
             if verbose:
                 print(f"❌ AI analysis failed: {str(e)}")
                 print("🔄 Using intelligent fallback with enhanced defaults")
@@ -274,17 +274,25 @@ class MasterAgentCrew:
         # Convert agents
         agents = []
         for agent_data in spec_data['agents']:
+            # Handle field name variations from AI output
+            agent_name = agent_data.get('agentName') or agent_data.get('name', 'DefaultAgent')
+            tools = agent_data.get('tools') or agent_data.get('required_tools', [])
+            max_iterations = agent_data.get('maxIterations') or agent_data.get('max_iter', 5)
+            allow_delegation = agent_data.get('allowDelegation', agent_data.get('allow_delegation', False))
+            memory_type = agent_data.get('memoryType', agent_data.get('memory_type', 'short_term'))
+            
             agent_spec = AgentSpec(
                 role=agent_data['role'],
-                name=agent_data['name'],
+                name=agent_name,
                 goal=agent_data['goal'],
                 backstory=agent_data['backstory'],
-                required_tools=agent_data['required_tools'],
-                memory_type=agent_data['memory_type'],
-                max_iter=agent_data['max_iter'],
-                allow_delegation=agent_data['allow_delegation']
+                required_tools=tools,
+                memory_type=memory_type,
+                max_iter=max_iterations,
+                allow_delegation=allow_delegation
             )
             agents.append(agent_spec)
+            print(f"🔧 DEBUG: Created agent spec - Name: {agent_name}, Role: {agent_data['role']}, Tools: {tools}")
         
         # Convert complexity
         complexity_map = {
@@ -561,9 +569,9 @@ class MasterAgentCrew:
                     {{
                         "role": "analyst",
                         "agentName": "ContentProcessor",
-                        "goal": "Extract and synthesize key insights from collected research materials",
-                        "backstory": "You are a content analysis specialist with expertise in processing academic papers and extracting actionable insights. You excel at distilling complex research into clear, useful summaries.",
-                        "tools": ["document_search", "data_processing", "file_operations", "code_execution"],
+                        "goal": "Extract and synthesize key insights from collected research materials and create data files",
+                        "backstory": "You are a content analysis specialist with expertise in processing research data and creating structured files. You excel at analyzing web content, creating CSV/PDF files with findings, and generating actionable insights.",
+                        "tools": ["web_search", "code_execution", "file_operations", "data_processing"],
                         "memoryType": "long_term",
                         "maxIterations": 5,
                         "allowDelegation": true
@@ -571,9 +579,9 @@ class MasterAgentCrew:
                     {{
                         "role": "writer",
                         "agentName": "ReportBuilder",
-                        "goal": "Compile research findings into structured, comprehensive reports",
-                        "backstory": "You are a technical writer specialized in creating clear, well-structured research reports. You excel at organizing complex information into accessible formats and delivering professional documentation.",
-                        "tools": ["file_operations", "data_processing", "web_search"],
+                        "goal": "Compile research findings into structured, comprehensive reports and create final documents",
+                        "backstory": "You are a technical writer specialized in creating research reports and generating final documents. You excel at organizing complex information, creating PDF/DOCX reports, and delivering professional documentation with proper formatting.",
+                        "tools": ["file_operations", "code_execution", "web_search", "data_processing"],
                         "memoryType": "short_term",
                         "maxIterations": 3,
                         "allowDelegation": false
@@ -770,6 +778,21 @@ class MasterAgentCrew:
         if not self._use_ai_agents:
             return {"success": False, "error": "AI agents are disabled"}
         
+        # Check for OpenAI API key availability
+        import os
+        if not os.getenv('OPENAI_API_KEY'):
+            if verbose:
+                print("🔧 DEBUG: No OpenAI API key found, using direct modification without AI analysis")
+            # Generate modification plan directly without AI
+            modification_plan = self._generate_direct_modification_plan(target_type, target_name, modification_request)
+            return {
+                "success": True,
+                "ai_analysis": "Direct modification (no AI analysis - missing OpenAI API key)",
+                "modification_plan": modification_plan,
+                "target_type": target_type,
+                "target_name": target_name
+            }
+        
         try:
             # Create the modification crew
             modification_task = f"""
@@ -866,13 +889,14 @@ class MasterAgentCrew:
         """Parse the AI's modification analysis response into actionable plan."""
         plan = {"steps": [], "actions": []}
         
-        # Simple parsing - look for key modification indicators in AI response
-        response_lower = ai_response.lower()
+        print(f"🔧 DEBUG: AI Response: {ai_response[:100]}...")
+        print(f"🔧 DEBUG: Target type: {target_type}, Request: {original_request}")
         
-        # Check if AI suggests updating task/goal
-        if any(word in response_lower for word in ['task', 'goal', 'objective', 'update', 'change']):
+        # Check if the AI response contains an error (like missing API key)
+        if "error" in ai_response.lower() or "failed" in ai_response.lower() or len(ai_response.strip()) < 10:
+            print(f"🔧 DEBUG: AI response appears to be an error or empty, using fallback logic")
+            # Generate a standard modification plan based on the request
             if target_type == "crew":
-                # For crews, update multiple properties
                 plan["steps"].append(f"Update crew task: {original_request}")
                 plan["actions"].append({"type": "update_property", "property": "task", "value": original_request})
                 
@@ -881,11 +905,67 @@ class MasterAgentCrew:
                 
                 plan["steps"].append(f"Recreate agents with roles appropriate for new task")
                 plan["actions"].append({"type": "recreate_agents_for_task", "value": original_request})
+                
+                print(f"🔧 DEBUG: Generated {len(plan['actions'])} fallback actions for crew modification")
             else:  # agent
-                plan["steps"].append(f"Update agent goal based on AI analysis: {original_request}")
+                plan["steps"].append(f"Update agent goal: {original_request}")
                 plan["actions"].append({"type": "update_property", "property": "goal", "value": original_request})
+        else:
+            # Parse actual AI response - look for key modification indicators
+            response_lower = ai_response.lower()
+            
+            # Check if AI suggests updating task/goal
+            keywords_found = [word for word in ['task', 'goal', 'objective', 'update', 'change'] if word in response_lower]
+            print(f"🔧 DEBUG: Found keywords: {keywords_found}")
+            
+            if any(word in response_lower for word in ['task', 'goal', 'objective', 'update', 'change']):
+                if target_type == "crew":
+                    # For crews, update multiple properties
+                    plan["steps"].append(f"Update crew task: {original_request}")
+                    plan["actions"].append({"type": "update_property", "property": "task", "value": original_request})
+                    
+                    plan["steps"].append(f"Update crew description to match new task")
+                    plan["actions"].append({"type": "update_property", "property": "description", "value": f"AI-updated crew for: {original_request}"})
+                    
+                    plan["steps"].append(f"Recreate agents with roles appropriate for new task")
+                    plan["actions"].append({"type": "recreate_agents_for_task", "value": original_request})
+                    
+                    print(f"🔧 DEBUG: Generated {len(plan['actions'])} actions for crew modification")
+                else:  # agent
+                    plan["steps"].append(f"Update agent goal based on AI analysis: {original_request}")
+                    plan["actions"].append({"type": "update_property", "property": "goal", "value": original_request})
+            else:
+                print(f"🔧 DEBUG: No modification keywords found in AI response")
         
         # Note: Tools will be assigned automatically during agent recreation
+        print(f"🔧 DEBUG: Final plan has {len(plan['steps'])} steps")
+        
+        return plan
+    
+    def _generate_direct_modification_plan(self, target_type: str, target_name: str, modification_request: str) -> Dict[str, Any]:
+        """Generate modification plan directly without AI analysis."""
+        plan = {"steps": [], "actions": []}
+        
+        print(f"🔧 DEBUG: Generating direct modification plan")
+        print(f"🔧 DEBUG: Target: {target_type} '{target_name}', Request: {modification_request}")
+        
+        if target_type == "crew":
+            # For crews, update task and recreate agents
+            plan["steps"].append(f"Update crew task: {modification_request}")
+            plan["actions"].append({"type": "update_property", "property": "task", "value": modification_request})
+            
+            plan["steps"].append(f"Update crew description to match new task")
+            plan["actions"].append({"type": "update_property", "property": "description", "value": f"AI-updated crew for: {modification_request}"})
+            
+            plan["steps"].append(f"Recreate agents with roles appropriate for new task")
+            plan["actions"].append({"type": "recreate_agents_for_task", "value": modification_request})
+            
+            print(f"🔧 DEBUG: Generated {len(plan['actions'])} direct actions for crew modification")
+        else:  # agent
+            plan["steps"].append(f"Update agent goal: {modification_request}")
+            plan["actions"].append({"type": "update_property", "property": "goal", "value": modification_request})
+            
+            print(f"🔧 DEBUG: Generated {len(plan['actions'])} direct actions for agent modification")
         
         return plan
     

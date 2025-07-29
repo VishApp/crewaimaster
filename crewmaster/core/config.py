@@ -10,20 +10,17 @@ from pydantic import BaseModel, Field
 from pathlib import Path
 
 
-class DatabaseConfig(BaseModel):
-    """Database configuration."""
-    url: str = Field(default_factory=lambda: f"sqlite:///{Path.home()}/.crewmaster/crewmaster.db")
-    echo: bool = False
-    pool_size: int = 5
-    max_overflow: int = 10
-
 class LLMConfig(BaseModel):
     """LLM configuration."""
+    provider: str = "openai"  # openai, google, anthropic, deepseek, custom
     model: str = "gpt-4"
     temperature: float = 0.7
     max_tokens: int = 2000
     api_key: Optional[str] = None
     base_url: Optional[str] = None
+    project_id: Optional[str] = None  # For Google Cloud
+    region: Optional[str] = None      # For Google Cloud
+    auth_file: Optional[str] = None   # For Google Service Account
 
 class MemoryConfig(BaseModel):
     """Memory configuration."""
@@ -40,7 +37,6 @@ class ToolConfig(BaseModel):
 
 class CrewMasterConfig(BaseModel):
     """Main CrewMaster configuration."""
-    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
     tools: ToolConfig = Field(default_factory=ToolConfig)
@@ -69,6 +65,12 @@ class Config:
     
     def _get_default_config_path(self) -> str:
         """Get default configuration file path."""
+        # First check for .crewmaster/config.yaml in current directory
+        local_config = Path(".crewmaster/config.yaml")
+        if local_config.exists():
+            return str(local_config)
+        
+        # Fallback to home directory
         config_dir = Path.home() / ".crewmaster"
         config_dir.mkdir(exist_ok=True)
         return str(config_dir / "config.yaml")
@@ -122,11 +124,6 @@ class Config:
             self.save_config()
     
     @property
-    def database(self) -> DatabaseConfig:
-        """Get database configuration."""
-        return self._config.database
-    
-    @property
     def llm(self) -> LLMConfig:
         """Get LLM configuration."""
         return self._config.llm
@@ -142,31 +139,7 @@ class Config:
         return self._config.tools
     
     def update_from_env(self):
-        """Update configuration from environment variables."""
-        env_mappings = {
-            'OPENAI_API_KEY': 'llm.api_key',
-            'CREWMASTER_DATABASE_URL': 'database.url',
-            'CREWMASTER_LLM_MODEL': 'llm.model',
-            'CREWMASTER_LLM_BASE_URL': 'llm.base_url',
-            'CREWMASTER_DEBUG': 'debug_mode',
-        }
-        
-        for env_var, config_key in env_mappings.items():
-            env_value = os.getenv(env_var)
-            if env_value is not None:
-                # Convert string values to appropriate types
-                if config_key.endswith('debug_mode'):
-                    env_value = env_value.lower() in ('true', '1', 'yes', 'on')
-                elif config_key.endswith('temperature'):
-                    env_value = float(env_value)
-                elif config_key.endswith(('max_tokens', 'pool_size', 'max_overflow')):
-                    env_value = int(env_value)
-                
-                # Set nested configuration values
-                parts = config_key.split('.')
-                if len(parts) == 2:
-                    section, key = parts
-                    section_obj = getattr(self._config, section)
-                    setattr(section_obj, key, env_value)
-                else:
-                    setattr(self._config, config_key, env_value)
+        """Update configuration from environment variables. (DISABLED - Use .crewmaster/config.yaml only)"""
+        # Environment variable override is disabled to force users to use .crewmaster/config.yaml
+        # This ensures all configuration is managed through the CLI and config file
+        pass

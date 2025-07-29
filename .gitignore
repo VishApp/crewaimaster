@@ -166,3 +166,6 @@ cython_debug/
 .crewmaster/
 vector_stores/
 logs/
+crewmaster.zip
+crewmaster/.DS_Store
+.DS_Store

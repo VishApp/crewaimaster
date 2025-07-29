@@ -12,20 +12,66 @@ from crewai.tools import BaseTool
 
 from .task_analyzer import CrewSpec, AgentSpec
 from .config import Config
-from ..database.database import Database, AgentRepository, CrewRepository, ToolRepository
-from ..database.models import AgentModel, CrewModel, AgentCreate, CrewCreate
-from ..tools.registry import ToolRegistry
+
+# Simple data structures to replace database models
+class AgentModel:
+    def __init__(self):
+        self.id = None
+        self.name = None
+        self.role = None
+        self.goal = None
+        self.backstory = None
+        self.required_tools = []
+        self.tools = []
+        self.memory_type = 'short_term'
+        self.max_iter = 5
+        self.allow_delegation = False
+        self.verbose = True
+        self.memory_enabled = False
+        self.usage_count = 0
+        self.success_rate = 0.0
+        self.avg_execution_time = 0.0
+
+class CrewModel:
+    def __init__(self):
+        self.id = None
+        self.name = None
+        self.task = None
+        self.description = None
+        self.agents = []
+        self.expected_output = None
+        self.complexity = None
+        self.estimated_time = 0
+        self.process_type = 'sequential'
+        self.verbose = True
+        self.memory_enabled = False
+        self.execution_count = 0
+        self.success_rate = 0.0
+        self.avg_execution_time = 0.0
+        self.last_executed = None
+        self.task_config = {}
+        self.ai_enhanced = True
 
 class CrewDesigner:
     """Designs and creates CrewAI crews from specifications."""
     
-    def __init__(self, config: Config, database: Database):
+    def __init__(self, config: Config, database=None):
         """Initialize the crew designer."""
         self.config = config
-        self.db = database
-        self.agent_repo = AgentRepository(database)
-        self.crew_repo = CrewRepository(database)
-        self.tool_repo = ToolRepository(database)
+        self.db = database  # Optional database, will be None when database layer is removed
+        
+        # Initialize repositories only if database is available
+        if database:
+            from ..database.database import AgentRepository, CrewRepository, ToolRepository
+            self.agent_repo = AgentRepository(database)
+            self.crew_repo = CrewRepository(database)
+            self.tool_repo = ToolRepository(database)
+        else:
+            self.agent_repo = None
+            self.crew_repo = None
+            self.tool_repo = None
+            
+        from ..tools.registry import ToolRegistry
         self.tool_registry = ToolRegistry()
         
         # CrewAI process mapping
@@ -43,6 +89,10 @@ class CrewDesigner:
     
     def create_crew_from_spec(self, spec: CrewSpec, reuse_agents: bool = True) -> CrewModel:
         """Create a new crew from a crew specification."""
+        print(f"🔧 DEBUG: Creating crew from spec with {len(spec.agents)} agent specifications")
+        for i, agent_spec in enumerate(spec.agents):
+            print(f"🔧 DEBUG: Agent spec {i+1}: {agent_spec.role} - {agent_spec.name}")
+        
         # Create or reuse agents
         agent_models = []
         crewai_agents = []
@@ -63,14 +113,34 @@ class CrewDesigner:
             crewai_agents.append(self._create_crewai_agent_from_spec(agent_spec))
         
         # Create CrewAI tasks
+        print(f"🔧 DEBUG: About to create tasks with {len(crewai_agents)} agents")
+        for i, agent in enumerate(crewai_agents):
+            print(f"🔧 DEBUG: Agent {i+1}: {agent.role}")
         crewai_tasks = self._create_tasks(spec, crewai_agents)
         
-        # Create CrewAI crew
+        # Get LLM configuration for CrewAI
+        from .llm_provider import get_llm_config_for_crewai
+        try:
+            llm_config = get_llm_config_for_crewai(self.config.get())
+        except Exception as e:
+            # Fallback configuration
+            llm_config = {
+                "model": self.config.get().llm.model,
+                "api_key": self.config.get().llm.api_key,
+                "base_url": self.config.get().llm.base_url
+            }
+        
+        # Create CrewAI crew with LLM configuration
         process = self.process_mapping.get(spec.process_type, Process.sequential)
+        
+        # Create CrewAI crew (LLM configuration is now handled at agent level)
+        print(f"🔧 DEBUG: Creating CrewAI crew with {len(crewai_agents)} agents and {len(crewai_tasks)} tasks")
+        print(f"🔧 DEBUG: Process type: {process}")
+        
         crewai_crew = Crew(
             agents=crewai_agents,
             tasks=crewai_tasks,
-            process=process,
+            process=process,  # Should be Process.sequential for collaboration
             verbose=self.config.get().default_agent_verbose,
             memory=False  # Disable memory for now to avoid CHROMA_OPENAI_API_KEY requirement
         )
@@ -95,8 +165,7 @@ class CrewDesigner:
         for agent in agent_models:
             agent_ids.append(agent.id)
         
-        # Create a simple mock crew model for now to avoid database session issues
-        from ..database.models import CrewModel
+        # Create crew model using local CrewModel class
         
         # Check if crew name already exists
         if any(crew.name == spec.name for crew in self._crews_cache.values()):
@@ -132,8 +201,7 @@ class CrewDesigner:
     
     def _create_new_agent(self, agent_spec: AgentSpec) -> AgentModel:
         """Create a new agent from specification."""
-        # Create a simple mock agent model for now to avoid database session issues
-        from ..database.models import AgentModel
+        # Create agent model using local AgentModel class
         
         agent_model = AgentModel()
         agent_model.id = agent_spec.name  # Use name as unique identifier
@@ -175,16 +243,55 @@ class CrewDesigner:
                 system_template=self._get_tool_only_system_template()
             )
         else:
-            return Agent(
-                role=agent_spec.role,
-                goal=enhanced_goal,
-                backstory=enhanced_backstory,
-                tools=tools,
-                verbose=self.config.get().default_agent_verbose,
-                allow_delegation=agent_spec.allow_delegation,
-                max_iter=agent_spec.max_iter,
-                memory=False  # Disable memory for now
-            )
+            # Get LLM configuration for this agent
+            from .llm_provider import get_llm_config_for_crewai
+            try:
+                config = self.config.get()
+                provider = config.llm.provider
+                print(f"🔧 DEBUG: Provider: {provider}, Model: {config.llm.model}")
+                
+                from crewai import LLM
+                
+                if provider == "custom":
+                    # For custom providers, we need to specify all parameters
+                    agent_llm = LLM(
+                        model=config.llm.model,
+                        api_key=config.llm.api_key,
+                        base_url=config.llm.base_url,
+                        temperature=config.llm.temperature,
+                        max_tokens=config.llm.max_tokens
+                    )
+                    print(f"🔧 DEBUG: Created custom LLM with base_url={config.llm.base_url}")
+                else:
+                    # For standard providers (openai, anthropic, google), let CrewAI auto-detect
+                    # It will use OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY env vars
+                    agent_llm = LLM(
+                        model=config.llm.model,
+                        temperature=config.llm.temperature,
+                        max_tokens=config.llm.max_tokens
+                    )
+                    print(f"🔧 DEBUG: Created standard LLM for {provider} with model={config.llm.model}")
+            except Exception as e:
+                print(f"🔧 DEBUG: Failed to create LLM instance: {e}")
+                # Fallback - let CrewAI use default configuration
+                agent_llm = None
+            
+            agent_kwargs = {
+                "role": agent_spec.role,
+                "goal": enhanced_goal,
+                "backstory": enhanced_backstory,
+                "tools": tools,
+                "verbose": self.config.get().default_agent_verbose,
+                "allow_delegation": agent_spec.allow_delegation,
+                "max_iter": agent_spec.max_iter,
+                "memory": False  # Disable memory for now
+            }
+            
+            # Add LLM if available
+            if agent_llm:
+                agent_kwargs["llm"] = agent_llm
+                
+            return Agent(**agent_kwargs)
     
     def _create_crewai_agent_from_model(self, agent_model: AgentModel) -> Agent:
         """Create a CrewAI Agent from database model."""
@@ -192,16 +299,54 @@ class CrewDesigner:
         tool_names = [tool.name for tool in agent_model.tools] if agent_model.tools else []
         tools = self._get_tools_for_agent(tool_names)
         
-        return Agent(
-            role=agent_model.role,
-            goal=agent_model.goal,
-            backstory=agent_model.backstory,
-            tools=tools,
-            verbose=agent_model.verbose,
-            allow_delegation=agent_model.allow_delegation,
-            max_iter=agent_model.max_iter,
-            memory=agent_model.memory_enabled
-        )
+        # Get LLM configuration for this agent
+        from .llm_provider import get_llm_config_for_crewai
+        try:
+            config = self.config.get()
+            provider = config.llm.provider
+            print(f"🔧 DEBUG: Model agent - Provider: {provider}, Model: {config.llm.model}")
+            
+            from crewai import LLM
+            
+            if provider == "custom":
+                # For custom providers, we need to specify all parameters
+                agent_llm = LLM(
+                    model=config.llm.model,
+                    api_key=config.llm.api_key,
+                    base_url=config.llm.base_url,
+                    temperature=config.llm.temperature,
+                    max_tokens=config.llm.max_tokens
+                )
+                print(f"🔧 DEBUG: Created custom model LLM with base_url={config.llm.base_url}")
+            else:
+                # For standard providers (openai, anthropic, google), let CrewAI auto-detect
+                agent_llm = LLM(
+                    model=config.llm.model,
+                    temperature=config.llm.temperature,
+                    max_tokens=config.llm.max_tokens
+                )
+                print(f"🔧 DEBUG: Created standard model LLM for {provider}")
+        except Exception as e:
+            print(f"🔧 DEBUG: Failed to create model LLM instance: {e}")
+            # Fallback - let CrewAI use default configuration
+            agent_llm = None
+        
+        agent_kwargs = {
+            "role": agent_model.role,
+            "goal": agent_model.goal,
+            "backstory": agent_model.backstory,
+            "tools": tools,
+            "verbose": agent_model.verbose,
+            "allow_delegation": agent_model.allow_delegation,
+            "max_iter": agent_model.max_iter,
+            "memory": agent_model.memory_enabled
+        }
+        
+        # Add LLM if available
+        if agent_llm:
+            agent_kwargs["llm"] = agent_llm
+            
+        return Agent(**agent_kwargs)
     
     def _get_tools_for_agent(self, tool_names: List[str]) -> List[Any]:
         """Get CrewAI tool instances for given tool names using the tool registry."""
@@ -218,10 +363,12 @@ class CrewDesigner:
             
             if real_tool and not self._is_mock_tool(real_tool):
                 # Use the real tool - wrap it to be CrewAI compatible
+                print(f"🔧 DEBUG: Using REAL {tool_name} tool: {type(real_tool).__name__}")
                 wrapped_tool = self._wrap_tool_for_crewai(real_tool, tool_name)
                 tools.append(wrapped_tool)
             else:
                 # Fallback to enhanced mock tools with better descriptions
+                print(f"🔧 DEBUG: Using MOCK {tool_name} tool (real tool not available)")
                 mock_tool = self._create_enhanced_mock_tool(tool_name)
                 if mock_tool:
                     tools.append(mock_tool)
@@ -230,8 +377,29 @@ class CrewDesigner:
     
     def _is_mock_tool(self, tool_instance) -> bool:
         """Check if a tool is a mock tool."""
+        if tool_instance is None:
+            return True
+        
         tool_class_name = tool_instance.__class__.__name__
-        return 'Mock' in tool_class_name or hasattr(tool_instance, '__call__') and 'Mock' in str(tool_instance.__call__)
+        tool_module = tool_instance.__class__.__module__
+        
+        # Check for explicit mock tools
+        if 'Mock' in tool_class_name:
+            return True
+        
+        # Check if it's from the mock tools in registry
+        if 'registry' in tool_module and 'Mock' in str(type(tool_instance)):
+            return True
+        
+        # Real tools from langchain_community, crewai_tools, etc. are not mock
+        if any(module in tool_module for module in ['langchain_community', 'crewai_tools', 'crewai.']):
+            return False
+        
+        # If it has a proper run method and is not from mock modules, it's likely real
+        if hasattr(tool_instance, 'run') and callable(getattr(tool_instance, 'run')):
+            return False
+            
+        return False  # Default to not mock to prefer real tools
     
     def _wrap_tool_for_crewai(self, tool_instance, tool_name: str):
         """Wrap any tool to be CrewAI compatible."""
@@ -437,13 +605,18 @@ Mock result: Simulated {tool_name} operation completed successfully with input: 
         return tool(tool_info['name'])(mock_func)
     
     def _create_tasks(self, spec: CrewSpec, agents: List[Agent]) -> List[Task]:
-        """Create CrewAI tasks for the crew with enhanced tool usage instructions."""
+        """Create CrewAI tasks for the crew with proper agent collaboration using context."""
         from datetime import datetime
         
         current_year = datetime.now().year
         current_date = datetime.now().strftime("%B %d, %Y")
         
-        # Enhance task description to force tool usage and input parsing
+        tasks = []
+        
+        if not agents:
+            return tasks
+        
+        # Create main task for the first agent
         enhanced_task_description = f"""{spec.task}
 
 MANDATORY EXECUTION REQUIREMENTS:
@@ -464,6 +637,7 @@ INPUT PARSING REQUIREMENTS:
 TOOLS AVAILABLE TO YOU:
 {self._get_tool_descriptions_for_task(agents)}
 
+COLLABORATION NOTE: You are the first agent in a collaborative team. Your output will be used by subsequent agents.
 START BY USING YOUR TOOLS TO GATHER CURRENT INFORMATION BEFORE GENERATING ANY RESPONSE."""
 
         # Enhanced expected output to emphasize current data
@@ -473,32 +647,129 @@ IMPORTANT: The output must include:
 - Publication dates for any papers or sources cited
 - Clear indication when information is from {current_year} vs previous years
 - Evidence that tools were used to gather current information
-- If no {current_year} data is found, explanation of what was searched and what was available"""
+- If no {current_year} data is found, explanation of what was searched and what was available
+- Clear, structured output for the next agent to build upon"""
         
         main_task = Task(
             description=enhanced_task_description,
             expected_output=enhanced_expected_output,
-            agent=agents[0] if agents else None
+            agent=agents[0]
         )
         
-        tasks = [main_task]
+        tasks.append(main_task)
+        print(f"🔧 DEBUG: Created main task for {agents[0].role}")
         
-        # If we have multiple agents, create enhanced coordination tasks
+        # Create collaborative tasks for additional agents with proper context linking
         if len(agents) > 1:
-            for agent in agents[1:]:
-                coordination_task = Task(
-                    description=f"""Support the main task using your {agent.role} expertise and available tools.
-
-REQUIREMENTS:
-- Use your tools to gather current {current_year} information in your domain
-- Coordinate with the primary agent to ensure comprehensive coverage
-- Focus on delivering factual, tool-verified information""",
-                    expected_output=f"Current {current_year} insights and tool-verified contributions related to {agent.role}",
-                    agent=agent
+            print(f"🔧 DEBUG: Creating {len(agents)-1} additional collaborative tasks with context")
+            
+            for i, agent in enumerate(agents[1:], 1):
+                # Create task description that emphasizes using previous agent's output
+                agent_specific_task = self._get_agent_specific_task_description(agent.role, spec.task, current_date, current_year)
+                
+                collaborative_task = Task(
+                    description=agent_specific_task,
+                    expected_output=f"""As a {agent.role}, provide your specialized expertise to enhance the work done by previous agents. Your output should:
+- Build directly upon the previous agent's findings
+- Add your unique {agent.role} perspective and insights
+- Provide complementary analysis or deliverables
+- Create a comprehensive result when combined with previous work""",
+                    agent=agent,
+                    context=[tasks[i-1]]  # This is the key fix - reference previous task for context
                 )
-                tasks.append(coordination_task)
+                
+                tasks.append(collaborative_task)
+                print(f"🔧 DEBUG: Created collaborative task for {agent.role} with context from {tasks[i-1].agent.role}")
+        
+        print(f"🔧 DEBUG: Total tasks created: {len(tasks)} with proper context linking")
+        for i, task in enumerate(tasks):
+            try:
+                context_count = len(task.context) if hasattr(task, 'context') and task.context and hasattr(task.context, '__len__') else 0
+                context_info = f" (uses context from {context_count} previous tasks)" if context_count > 0 else ""
+                print(f"🔧 DEBUG: Task {i+1}: Agent = {task.agent.role}{context_info}")
+            except (TypeError, AttributeError):
+                print(f"🔧 DEBUG: Task {i+1}: Agent = {task.agent.role} (context info unavailable)")
         
         return tasks
+    
+    def _get_agent_specific_task_description(self, agent_role: str, original_task: str, current_date: str, current_year: int) -> str:
+        """Generate agent-specific task descriptions based on their role."""
+        base_requirements = f"""
+CONTEXT COLLABORATION:
+- You will receive the output from the previous agent automatically via context
+- Use their findings as the foundation for your specialized work
+- DO NOT repeat their work - build upon it with your {agent_role} expertise
+
+MANDATORY EXECUTION REQUIREMENTS:
+- Current date: {current_date}
+- You MUST use your available tools for additional research and analysis
+- Verify and expand upon previous findings where appropriate
+- Add your unique {agent_role} perspective to the overall solution"""
+
+        role_specific_tasks = {
+            "researcher": f"""As a researcher, your task is to expand and verify the research conducted by the previous agent.
+
+RESEARCH FOCUS:
+- Validate findings from the previous agent's research
+- Conduct additional searches to fill any gaps
+- Look for more recent {current_year} studies or developments
+- Cross-reference sources to ensure accuracy
+- Find complementary research that supports or challenges initial findings
+
+YOUR RESEARCH TASK: {original_task}
+{base_requirements}""",
+
+            "analyst": f"""As an analyst, your task is to analyze and synthesize the data/information provided by the previous agent.
+
+ANALYSIS FOCUS:
+- Perform deep analysis of the research and data collected
+- Identify patterns, trends, and key insights
+- Create summaries and actionable recommendations
+- Quantify findings where possible
+- Compare different approaches or solutions
+
+YOUR ANALYSIS TASK: {original_task}
+{base_requirements}""",
+
+            "writer": f"""As a writer, your task is to create comprehensive documentation from the previous agent's work.
+
+WRITING FOCUS:
+- Organize findings into clear, structured documents
+- Create executive summaries and detailed reports
+- Ensure content is accessible to target audience
+- Add proper citations and references
+- Format content professionally
+
+YOUR WRITING TASK: {original_task}
+{base_requirements}""",
+
+            "specialist": f"""As a specialist, your task is to provide expert-level insights on the previous agent's work.
+
+SPECIALIST FOCUS:
+- Apply domain expertise to evaluate findings
+- Provide technical recommendations and best practices
+- Identify potential issues or limitations
+- Suggest implementation strategies
+- Add professional insights from your field
+
+YOUR SPECIALIST TASK: {original_task}
+{base_requirements}""",
+
+            "critic": f"""As a critic, your task is to critically evaluate and improve the previous agent's work.
+
+CRITICAL FOCUS:
+- Identify strengths and weaknesses in previous work
+- Suggest improvements and alternative approaches
+- Validate accuracy and completeness
+- Provide constructive feedback
+- Recommend next steps or additional research
+
+YOUR CRITICAL EVALUATION TASK: {original_task}
+{base_requirements}"""
+        }
+        
+        return role_specific_tasks.get(agent_role.lower(), f"""As a {agent_role}, build upon the previous agent's work to complete: {original_task}
+{base_requirements}""")
     
     def _get_tool_descriptions_for_task(self, agents: List[Agent]) -> str:
         """Generate tool descriptions for task instructions."""
@@ -640,9 +911,13 @@ NEVER generate content without tool execution."""
                 
                 crewai_agents.append(agent)
             
-            # Create enhanced task with current date requirements
+            # Create enhanced tasks with proper collaboration
             from crewai import Task
-            enhanced_task_description = f"""{crew_model.task}
+            tasks = []
+            
+            if crewai_agents:
+                # Create main task for first agent
+                enhanced_task_description = f"""{crew_model.task}
 
 MANDATORY EXECUTION REQUIREMENTS:
 - Current date: {datetime.now().strftime("%B %d, %Y")}
@@ -652,18 +927,39 @@ MANDATORY EXECUTION REQUIREMENTS:
 - Always verify information is from {datetime.now().year} when possible
 - If you find only older information, clearly state the publication dates you found
 
+COLLABORATION NOTE: You are the first agent in a collaborative team. Your output will be used by subsequent agents.
 START BY USING YOUR TOOLS TO GATHER CURRENT INFORMATION BEFORE GENERATING ANY RESPONSE."""
             
-            task = Task(
-                description=enhanced_task_description,
-                expected_output=f"Current {datetime.now().year} results and tool-verified information for: {crew_model.task}",
-                agent=crewai_agents[0] if crewai_agents else None
-            )
+                main_task = Task(
+                    description=enhanced_task_description,
+                    expected_output=f"Current {datetime.now().year} results and tool-verified information for: {crew_model.task}",
+                    agent=crewai_agents[0]
+                )
+                tasks.append(main_task)
+                
+                # Create collaborative tasks for additional agents
+                for i, agent in enumerate(crewai_agents[1:], 1):
+                    agent_specific_task = self._get_agent_specific_task_description(
+                        agent.role, crew_model.task, 
+                        datetime.now().strftime("%B %d, %Y"), 
+                        datetime.now().year
+                    )
+                    
+                    collaborative_task = Task(
+                        description=agent_specific_task,
+                        expected_output=f"Specialized {agent.role} analysis building upon previous work",
+                        agent=agent,
+                        context=[tasks[i-1]]  # Link to previous task
+                    )
+                    tasks.append(collaborative_task)
+            else:
+                # Fallback for no agents
+                tasks = []
             
             # Create crew
             crewai_crew = Crew(
                 agents=crewai_agents,
-                tasks=[task],
+                tasks=tasks,  # Use the properly linked tasks
                 process=Process.sequential,
                 verbose=True,
                 memory=False

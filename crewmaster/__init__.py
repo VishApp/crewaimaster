@@ -23,12 +23,10 @@ __version__ = "0.1.0"
 __author__ = "CrewMaster Team"
 __email__ = "team@crewmaster.dev"
 
-from .core.master_agent import MasterAgent
-from .core.crew_designer import CrewDesigner
-from .core.task_analyzer import TaskAnalyzer
+from .core.master_agent_crew import MasterAgentCrew
+from .core.file_generator import CrewFileGenerator
 
 __all__ = [
-    "MasterAgent",
-    "CrewDesigner", 
-    "TaskAnalyzer",
+    "MasterAgentCrew",
+    "CrewFileGenerator",
 ]

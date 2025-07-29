@@ -70,7 +70,10 @@ class CrewOrchestratorAgent:
             orchestration_log.append("🎨 Starting AI agent design...")
             enhanced_agents = []
             
-            for agent_spec in task_analysis.agents:
+            print(f"🔧 DEBUG: TaskAnalyzer found {len(task_analysis.agents)} agents")
+            for i, agent_spec in enumerate(task_analysis.agents):
+                print(f"🔧 DEBUG: Processing agent {i+1}: {agent_spec.role} - {agent_spec.name}")
+                
                 # Create design request for each agent
                 design_request = AgentDesignRequest(
                     role=agent_spec.role,
@@ -81,7 +84,12 @@ class CrewOrchestratorAgent:
                 )
                 
                 # Use AI to design each agent - NO hardcoding!
-                designed_agent = self.agent_designer.design_agent(design_request)
+                try:
+                    designed_agent = self.agent_designer.design_agent(design_request)
+                    print(f"🔧 DEBUG: AgentDesigner created: {designed_agent.role} - {designed_agent.name}")
+                except Exception as e:
+                    print(f"🔧 DEBUG: AgentDesigner failed for {agent_spec.role}: {e}")
+                    continue
                 
                 # Create enhanced agent spec with AI-generated properties
                 enhanced_agent_spec = AgentSpec(
