@@ -19,9 +19,9 @@ warnings.filterwarnings("ignore", message=".*event loop.*")
 # Set environment variable
 os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "CrewAIMaster Team"
-__email__ = "team@crewaimaster.dev"
+__email__ = "vishnuprasadapp@gmail.com"
 
 from .core.master_agent_crew import MasterAgentCrew
 from .core.file_generator import CrewFileGenerator
