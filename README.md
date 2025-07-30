@@ -21,7 +21,7 @@ pip install -e .
 ## 🎬 Demo
 
 ### 📹 Video Walkthrough
-[![CrewAIMaster Demo](docs/images/crewaimaster-welcome.png)](https://youtu.be/osF9oTBa9IU)
+[![CrewAIMaster Demo](docs/gif/crewaimaster.gif)](https://youtu.be/osF9oTBa9IU)
 
 *Click the image above to watch a complete walkthrough of CrewAIMaster in action*
 
