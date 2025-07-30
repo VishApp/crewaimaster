@@ -1,5 +1,5 @@
 """
-Knowledge Base Manager for CrewMaster.
+Knowledge Base Manager for CrewAIMaster.
 
 This module handles ingestion, processing, and retrieval of knowledge
 for agents to use in their tasks.
@@ -500,6 +500,6 @@ class KnowledgeManager:
     
     def _get_vector_store_path(self, kb_id: str) -> Path:
         """Get the path for storing vector store files."""
-        base_path = Path.home() / ".crewmaster" / "vector_stores" / kb_id
+        base_path = Path.home() / ".crewaimaster" / "vector_stores" / kb_id
         base_path.mkdir(parents=True, exist_ok=True)
         return base_path

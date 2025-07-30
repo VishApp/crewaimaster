@@ -1,5 +1,5 @@
 """
-AI-Powered Tool Creator for CrewMaster.
+AI-Powered Tool Creator for CrewAIMaster.
 
 This module provides an intelligent tool creation system using CrewAI agents
 that can analyze user requirements and generate complete, working tools.
@@ -28,7 +28,7 @@ class AIToolCreator:
         if require_llm:
             self.tool_generator_agent = CustomToolGeneratorAgent(llm_config)
         
-        self.tools_directory = Path("/tmp/crewmaster_custom_tools")
+        self.tools_directory = Path("/tmp/crewaimaster_custom_tools")
         self.tools_directory.mkdir(exist_ok=True)
     
     def _validate_llm_config(self) -> bool:

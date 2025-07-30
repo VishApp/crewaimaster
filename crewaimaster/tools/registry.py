@@ -1,5 +1,5 @@
 """
-Tool Registry for CrewMaster.
+Tool Registry for CrewAIMaster.
 
 This module manages the registration and instantiation of tools
 that can be used by agents.
@@ -21,11 +21,11 @@ except ImportError:
 CREWAI_TOOLS = {}
 try:
     from crewai_tools import (
-        FileReadTool, DirectoryReadTool, DirectorySearchTool, CodeDocsSearchTool,
+        SerperDevTool, FileReadTool, DirectoryReadTool, DirectorySearchTool, CodeDocsSearchTool,
         CSVSearchTool, DOCXSearchTool, TXTSearchTool, JSONSearchTool, MDXSearchTool,
         PDFSearchTool, PGSearchTool, RagTool, ScrapeElementFromWebsiteTool,
         ScrapeWebsiteTool, WebsiteSearchTool, XMLSearchTool, YoutubeChannelSearchTool,
-        YoutubeVideoSearchTool, SerperDevTool, EXASearchTool, BrowserbaseLoadTool,
+        YoutubeVideoSearchTool, EXASearchTool, BrowserbaseLoadTool,
         GithubSearchTool, CodeInterpreterTool, FirecrawlSearchTool, FirecrawlCrawlWebsiteTool,
         FirecrawlScrapeWebsiteTool, LlamaIndexTool, ComposioTool, ApifyActorsTool
     )
@@ -74,7 +74,7 @@ except ImportError:
     pass
 
 class ToolBase(ABC):
-    """Base class for CrewMaster tools."""
+    """Base class for CrewAIMaster tools."""
     
     @property
     @abstractmethod
@@ -815,7 +815,7 @@ class ToolRegistry:
         }
         
         # Load from config file if exists
-        config_file = os.path.expanduser('~/.crewmaster/tools_config.json')
+        config_file = os.path.expanduser('~/.crewaimaster/tools_config.json')
         if os.path.exists(config_file):
             try:
                 with open(config_file, 'r') as f:
@@ -866,7 +866,7 @@ class ToolRegistry:
     
     def _load_custom_tools(self):
         """Load previously created custom tools."""
-        custom_tools_file = os.path.expanduser('~/.crewmaster/custom_tools.json')
+        custom_tools_file = os.path.expanduser('~/.crewaimaster/custom_tools.json')
         if os.path.exists(custom_tools_file):
             try:
                 with open(custom_tools_file, 'r') as f:
@@ -906,7 +906,7 @@ class ToolRegistry:
         """Save custom tools to persistent storage."""
         try:
             # Create directory if it doesn't exist
-            custom_dir = os.path.expanduser('~/.crewmaster')
+            custom_dir = os.path.expanduser('~/.crewaimaster')
             os.makedirs(custom_dir, exist_ok=True)
             
             # Find custom tools (those not in default categories)

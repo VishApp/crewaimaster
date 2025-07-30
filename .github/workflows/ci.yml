@@ -31,19 +31,19 @@ jobs:
 
     - name: Run linting with ruff
       run: |
-        uv run ruff check crewmaster/
+        uv run ruff check crewaimaster/
 
     - name: Run formatting check with ruff
       run: |
-        uv run ruff format --check crewmaster/
+        uv run ruff format --check crewaimaster/
 
     - name: Run type checking with mypy
       run: |
-        uv run mypy crewmaster/
+        uv run mypy crewaimaster/
 
     - name: Run tests with pytest
       run: |
-        uv run pytest tests/ --cov=crewmaster --cov-report=xml
+        uv run pytest tests/ --cov=crewaimaster --cov-report=xml
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -72,7 +72,7 @@ jobs:
 
     - name: Run security check with bandit
       run: |
-        uv run bandit -r crewmaster/ -f json -o bandit-report.json
+        uv run bandit -r crewaimaster/ -f json -o bandit-report.json
       continue-on-error: true
 
     - name: Upload security report

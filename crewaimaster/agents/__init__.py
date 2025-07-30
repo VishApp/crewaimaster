@@ -1,5 +1,5 @@
 """
-CrewMaster AI Agents.
+CrewAIMaster AI Agents.
 
 This module contains intelligent AI agents that handle different aspects
 of crew creation and management using CrewAI architecture.

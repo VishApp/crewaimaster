@@ -44,7 +44,7 @@ class MasterAgentCrew:
     def __init__(self, config: Config):
         """Initialize the master agent crew."""
         self.config = config
-        # Environment variable loading is disabled - use .crewmaster/config.yaml only
+        # Environment variable loading is disabled - use .crewaimaster/config.yaml only
         
         # Initialize AI agents with provider-specific configuration
         try:
@@ -190,7 +190,7 @@ class MasterAgentCrew:
         import os
         from datetime import datetime
         
-        stats_file = "/tmp/crewmaster_execution_stats.pkl"
+        stats_file = "/tmp/crewaimaster_execution_stats.pkl"
         
         # Load existing stats
         try:
@@ -241,7 +241,7 @@ class MasterAgentCrew:
         import pickle
         import os
         
-        stats_file = "/tmp/crewmaster_execution_stats.pkl"
+        stats_file = "/tmp/crewaimaster_execution_stats.pkl"
         
         try:
             if os.path.exists(stats_file):
@@ -657,7 +657,7 @@ class MasterAgentCrew:
         try:
             import pickle
             import os
-            cache_file = "/tmp/crewmaster_analysis_cache.pkl"
+            cache_file = "/tmp/crewaimaster_analysis_cache.pkl"
             if os.path.exists(cache_file):
                 with open(cache_file, 'rb') as f:
                     self._analysis_cache = pickle.load(f)
@@ -668,7 +668,7 @@ class MasterAgentCrew:
         """Save analysis cache to file."""
         try:
             import pickle
-            cache_file = "/tmp/crewmaster_analysis_cache.pkl"
+            cache_file = "/tmp/crewaimaster_analysis_cache.pkl"
             with open(cache_file, 'wb') as f:
                 pickle.dump(self._analysis_cache, f)
         except Exception:
@@ -707,7 +707,7 @@ class MasterAgentCrew:
             "total_entries": total_entries,
             "valid_entries": valid_entries,
             "expired_entries": expired_entries,
-            "cache_file": "/tmp/crewmaster_analysis_cache.pkl"
+            "cache_file": "/tmp/crewaimaster_analysis_cache.pkl"
         }
     
     def list_cached_tasks(self) -> List[Dict[str, Any]]:
@@ -1096,7 +1096,7 @@ class MasterAgentCrew:
                 for agent in crew.agents
             ],
             "export_timestamp": datetime.now(timezone.utc).isoformat(),
-            "crewmaster_version": "0.1.0",
+            "crewaimaster_version": "0.1.0",
             "ai_enhanced": hasattr(crew, 'ai_enhanced') and crew.ai_enhanced
         }
         

@@ -1,5 +1,5 @@
 """
-Task analysis module for CrewMaster.
+Task analysis module for CrewAIMaster.
 
 This module analyzes natural language task descriptions and determines:
 - Required agent roles and capabilities

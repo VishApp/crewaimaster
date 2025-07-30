@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "crewmaster"
+name = "crewaimaster"
 version = "0.1.0"
 description = "A Python package for building intelligent multi-agent systems using CrewAI"
 readme = "README.md"
@@ -22,19 +22,19 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 keywords = ["ai", "multi-agent", "crewai", "automation", "agents"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "crewai",
-    "crewai[tools]",
-    "pydantic>=2.0.0",
-    "python-dotenv>=1.0.0",
-    "rich>=13.0.0",
-    "typer>=0.9.0",
-    "openai>=1.0.0",
-    "pyyaml>=6.0.2",
+    "crewai-tools==0.58.0",
+    "pydantic",
+    "python-dotenv",
+    "rich",
+    "typer",
+    "openai",
+    "pyyaml",
     "langchain-anthropic",
     "langchain-google-genai",
-    "langchain-openai"
+    "langchain-openai",
 ]
 
 [project.optional-dependencies]
@@ -53,18 +53,18 @@ web = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/VishApp/crewmaster"
-Documentation = "https://github.com/VishApp/crewmaster#readme"
-Repository = "https://github.com/VishApp/crewmaster"
-Issues = "https://github.com/VishApp/crewmaster/issues"
-Changelog = "https://github.com/VishApp/crewmaster/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/VishApp/crewaimaster"
+Documentation = "https://github.com/VishApp/crewaimaster#readme"
+Repository = "https://github.com/VishApp/crewaimaster"
+Issues = "https://github.com/VishApp/crewaimaster/issues"
+Changelog = "https://github.com/VishApp/crewaimaster/blob/main/CHANGELOG.md"
 
 [project.scripts]
-crewmaster = "crewmaster.cli:main"
+crewaimaster = "crewaimaster.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["crewmaster*"]
+include = ["crewaimaster*"]
 
 [tool.black]
 line-length = 88
@@ -81,3 +81,8 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[tool.uv.workspace]
+members = [
+    "crews/blog_writer_04",
+]

@@ -3,10 +3,10 @@ include LICENSE
 include CHANGELOG.md
 include pyproject.toml
 include uv.lock
-recursive-include crewmaster *.py
-recursive-include crewmaster *.yaml
-recursive-include crewmaster *.yml
-recursive-include crewmaster *.json
+recursive-include crewaimaster *.py
+recursive-include crewaimaster *.yaml
+recursive-include crewaimaster *.yml
+recursive-include crewaimaster *.json
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * .DS_Store
@@ -16,4 +16,4 @@ prune venv
 prune .git
 prune db
 prune crews
-prune crewmaster.egg-info
+prune crewaimaster.egg-info

@@ -1,6 +1,6 @@
-# Contributing to CrewMaster
+# Contributing to CrewAIMaster
 
-Thank you for your interest in contributing to CrewMaster! We welcome contributions from the community and are grateful for your support.
+Thank you for your interest in contributing to CrewAIMaster! We welcome contributions from the community and are grateful for your support.
 
 ## Table of Contents
 
@@ -41,8 +41,8 @@ This project and everyone participating in it is governed by our Code of Conduct
 
 ```bash
 # Clone your fork
-git clone https://github.com/VishApp/crewmaster.git
-cd crewmaster
+git clone https://github.com/VishApp/crewaimaster.git
+cd crewaimaster
 
 # Install development dependencies
 pip install -e ".[dev]"
@@ -51,15 +51,15 @@ pip install -e ".[dev]"
 pre-commit install
 
 # Verify installation
-crewmaster --help
+crewaimaster --help
 ```
 
 ### Alternative Setup with UV
 
 ```bash
 # Clone your fork
-git clone https://github.com/VishApp/crewmaster.git
-cd crewmaster
+git clone https://github.com/VishApp/crewaimaster.git
+cd crewaimaster
 
 # Install with UV
 uv sync --extra dev
@@ -76,7 +76,7 @@ We welcome several types of contributions:
 
 - **Bug fixes**: Fix existing issues or bugs
 - **Feature enhancements**: Improve existing functionality
-- **New features**: Add new capabilities to CrewMaster
+- **New features**: Add new capabilities to CrewAIMaster
 - **Documentation**: Improve or add documentation
 - **Tests**: Add or improve test coverage
 - **Performance improvements**: Optimize existing code
@@ -102,11 +102,11 @@ We welcome several types of contributions:
    pytest tests/
    
    # Run linting
-   ruff check crewmaster/
-   ruff format crewmaster/
+   ruff check crewaimaster/
+   ruff format crewaimaster/
    
    # Run type checking
-   mypy crewmaster/
+   mypy crewaimaster/
    ```
 
 4. **Update documentation** if needed
@@ -141,7 +141,7 @@ When reporting bugs, please include:
 - **Clear title** and description
 - **Steps to reproduce** the issue
 - **Expected vs. actual behavior**
-- **Environment details** (OS, Python version, CrewMaster version)
+- **Environment details** (OS, Python version, CrewAIMaster version)
 - **Error messages** or logs (if applicable)
 - **Minimal reproducible example** (if possible)
 
@@ -226,7 +226,7 @@ pytest tests/
 pytest tests/test_specific_file.py
 
 # Run with coverage
-pytest tests/ --cov=crewmaster
+pytest tests/ --cov=crewaimaster
 
 # Run tests in parallel
 pytest tests/ -n auto
@@ -302,4 +302,4 @@ If you have questions about contributing, please:
 3. Open a new discussion or issue
 4. Contact the maintainers directly
 
-Thank you for contributing to CrewMaster! 🚀
+Thank you for contributing to CrewAIMaster! 🚀

@@ -1,5 +1,5 @@
 """
-CrewMaster CLI - Simplified command line interface for file-based crew management.
+CrewAIMaster CLI - Simplified command line interface for file-based crew management.
 """
 
 import warnings
@@ -30,12 +30,12 @@ from .core.task_analyzer import CrewSpec, AgentSpec
 from .core.crew_designer import CrewModel
 
 app = typer.Typer(
-    name="crewmaster",
-    help="""[bold cyan]CrewMaster: Build intelligent multi-agent systems using CrewAI[/bold cyan]
+    name="crewaimaster",
+    help="""[bold cyan]CrewAIMaster: Build intelligent multi-agent systems using CrewAI[/bold cyan]
 
 [green]🎯 Quick Start:[/green]
-  [cyan]crewmaster create[/cyan] "Create a blog writer who can write simple and informative blog posts for beginners." --name blog_writer_01 # CREATE
-  [cyan]crewmaster run[/cyan] blog_writer_01 --input "Write a blog post about the benefits of AI" # EXECUTE
+  [cyan]crewaimaster create[/cyan] "Create a blog writer who can write simple and informative blog posts for beginners." --name blog_writer_01 # CREATE
+  [cyan]crewaimaster run[/cyan] blog_writer_01 --input "Write a blog post about the benefits of AI" # EXECUTE
 """,
     rich_markup_mode="rich"
 )
@@ -49,7 +49,7 @@ def main_callback(ctx: typer.Context):
         display_banner()
 
 def display_banner():
-    """Display CrewMaster banner."""
+    """Display CrewAIMaster banner."""
     banner = """[bold cyan]
                                                                         
 [blink]╔═╗╦═╗╔═╗╦ ╦[/blink]  [bold blue]╔╦╗╔═╗╔═╗╔╦╗╔═╗╦═╗[/bold blue]                
@@ -66,7 +66,7 @@ def display_banner():
     console.print("=" * 60)
     
     console.print("\n[bold green]Step 1:[/bold green] Create your first crew")
-    console.print("  [cyan]crewmaster create \"A blog writer who can write simple and informative blog posts for beginners.\" --name blog_writer_01[/cyan]")
+    console.print("  [cyan]crewaimaster create \"A blog writer who can write simple and informative blog posts for beginners.\" --name blog_writer_01[/cyan]")
     console.print("  [dim]📁 Generates: YAML configs, Python modules, documentation[/dim]")
     
     console.print("\n[bold green]Step 2:[/bold green] Run your crew (requires API key)")
@@ -74,15 +74,15 @@ def display_banner():
     console.print("  [cyan]export ANTHROPIC_API_KEY=\"your-key\"[/cyan]  # Anthropic")
     
     console.print("\n[bold green]Step 3:[/bold green] Work with generated files")
-    console.print("  [cyan]crewmaster run blog_writer_01 --input \"Write a blog post about the benefits of AI\"[/cyan]")
+    console.print("  [cyan]crewaimaster run blog_writer_01 --input \"Write a blog post about the benefits of AI\"[/cyan]")
     console.print("  [cyan]cd crews/blog_writer_01 && ./run.sh 'your input'[/cyan] # Alternative execution")
     console.print("  [dim]🔄 Version control friendly - track changes in Git[/dim]")
     
     console.print("\n[dim]💡 Essential Commands:[/dim]")
-    console.print("[dim]  • crewmaster create \"task\" - Create new crew[/dim]")
-    console.print("[dim]  • crewmaster run <name> - Execute crew[/dim]")
-    console.print("[dim]  • crewmaster providers - Configure LLM providers[/dim]")
-    console.print("[dim]  • crewmaster version - Show version[/dim]")
+    console.print("[dim]  • crewaimaster create \"task\" - Create new crew[/dim]")
+    console.print("[dim]  • crewaimaster run <name> - Execute crew[/dim]")
+    console.print("[dim]  • crewaimaster providers - Configure LLM providers[/dim]")
+    console.print("[dim]  • crewaimaster version - Show version[/dim]")
 
 @app.command()
 def create(
@@ -95,8 +95,8 @@ def create(
     Creates a self-contained CrewAI project with YAML configurations and Python modules.
     
     Examples:
-      crewmaster create "research competitors and write analysis report"
-      crewmaster create "analyze cryptocurrency market trends" --name crypto_crew
+      crewaimaster create "research competitors and write analysis report"
+      crewaimaster create "analyze cryptocurrency market trends" --name crypto_crew
     """
     if verbose:
         display_banner()
@@ -124,7 +124,7 @@ def create(
                     name=agent.name,
                     goal=agent.goal,
                     backstory=agent.backstory,
-                    required_tools=getattr(agent, 'required_tools', []) or ['SerperDevTool'],
+                    required_tools=getattr(agent, 'required_tools', []) or ['WebsiteSearchTool', 'FileReadTool'],
                     memory_type=getattr(agent, 'memory_type', 'short_term'),
                     max_iter=getattr(agent, 'max_iter', 5),
                     allow_delegation=getattr(agent, 'allow_delegation', False)
@@ -164,9 +164,9 @@ def create(
         console.print(f"  [cyan]•[/cyan] README.md - Documentation")
         
         console.print(f"\n[dim]💡 Next steps:[/dim]")
-        console.print(f"[dim]  • crewmaster run {crew_spec.name}[/dim]")
-        console.print(f"[dim]  • cd {crew_path} && ./run.sh[/dim]")
-        
+        console.print(f"[dim]  • crewaimaster run {crew_spec.name} --input \"your input\"[/dim]")
+        console.print(f"[dim]  • cd {crew_path} && ./run.sh \"your input\"[/dim]")
+
     except Exception as e:
         console.print(f"\n[bold red]❌ Error creating crew:[/bold red] {str(e)}")
         raise typer.Exit(1)
@@ -183,9 +183,9 @@ def run(
     
     Requirements:
     - OpenAI/Anthropic API key: export OPENAI_API_KEY="your-key"
-    - Existing crew (created with 'crewmaster create')
+    - Existing crew (created with 'crewaimaster create')
     
-    Example: crewmaster run my_research_crew --input "focus on recent data"
+    Example: crewaimaster run my_research_crew --input "focus on recent data"
     """
     console.print(f"\n[bold green]🏃 Running crew:[/bold green] {crew_name}")
     if input_data:
@@ -306,19 +306,19 @@ def providers(
     try:        
         console.print(f"\n[bold green]🔧 CLI Configuration (All Providers):[/bold green]")
         console.print("[bold]OpenAI:[/bold]")
-        console.print("• [cyan]crewmaster providers --configure openai --api-key \"your-openai-key\" --model \"gpt-4\"[/cyan]")
+        console.print("• [cyan]crewaimaster providers --configure openai --api-key \"your-openai-key\" --model \"gpt-4\"[/cyan]")
         console.print()
         console.print("[bold]Anthropic:[/bold]")
-        console.print("• [cyan]crewmaster providers --configure anthropic --api-key \"your-anthropic-key\" --model \"claude-3-sonnet-20240229\"[/cyan]")
+        console.print("• [cyan]crewaimaster providers --configure anthropic --api-key \"your-anthropic-key\" --model \"claude-3-sonnet-20240229\"[/cyan]")
         console.print()
         console.print("[bold]Google:[/bold]")
-        console.print("• [cyan]crewmaster providers --configure google --api-key \"your-google-key\" --model \"gemini-pro\"[/cyan]")
+        console.print("• [cyan]crewaimaster providers --configure google --api-key \"your-google-key\" --model \"gemini-pro\"[/cyan]")
         console.print()
         console.print("[bold]DeepSeek:[/bold]")
-        console.print("• [cyan]crewmaster providers --configure deepseek --api-key \"your-deepseek-key\" --model \"deepseek-chat\"[/cyan]")
+        console.print("• [cyan]crewaimaster providers --configure deepseek --api-key \"your-deepseek-key\" --model \"deepseek-chat\"[/cyan]")
         console.print()
         console.print("[bold]Custom Provider:[/bold]")
-        console.print("• [cyan]crewmaster providers --configure custom --api-key \"your-key\" --base-url \"https://api.example.com/v1\" --model \"gpt-4o-mini\"[/cyan]")
+        console.print("• [cyan]crewaimaster providers --configure custom --api-key \"your-key\" --base-url \"https://api.example.com/v1\" --model \"gpt-4o-mini\"[/cyan]")
         
         config = Config()
         console.print(f"\n[dim]💡 Current provider: {config.llm.provider}[/dim]")
@@ -330,12 +330,12 @@ def providers(
 
 @app.command()
 def version():
-    """Show CrewMaster version."""
+    """Show CrewAIMaster version."""
     try:
         from . import __version__
-        console.print(f"[bold green]CrewMaster[/bold green] version [cyan]{__version__}[/cyan]")
+        console.print(f"[bold green]CrewAIMaster[/bold green] version [cyan]{__version__}[/cyan]")
     except ImportError:
-        console.print(f"[bold green]CrewMaster[/bold green] version [cyan]1.0.0[/cyan]")
+        console.print(f"[bold green]CrewAIMaster[/bold green] version [cyan]1.0.0[/cyan]")
 
 def main():
     """Main CLI entry point."""

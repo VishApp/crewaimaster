@@ -1,5 +1,5 @@
 """
-Master Agent Tools for CrewMaster.
+Master Agent Tools for CrewAIMaster.
 
 These tools are used by the MasterAgent crew to analyze tasks, design agents,
 and orchestrate crew creation intelligently.
@@ -241,7 +241,7 @@ def design_crew_structure(agents_info: str, task_description: str) -> str:
 @tool("Available Tools Registry")
 def get_available_tools() -> str:
     """
-    Get the list of all available tools in the CrewMaster system.
+    Get the list of all available tools in the CrewAIMaster system.
     
     Returns:
         JSON string with available tools and their descriptions

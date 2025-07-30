@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-01-30
 
 ### Added
-- Initial CrewMaster package implementation
+- Initial CrewAIMaster package implementation
 - AI-powered crew creation and orchestration
 - CLI interface with rich terminal UI
 - Support for multiple LLM providers (OpenAI, Anthropic, Google, DeepSeek)
@@ -30,12 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tools and testing setup
 
 ### Features
-- `crewmaster create` - Create intelligent multi-agent crews
-- `crewmaster run` - Execute crews with real-time monitoring
-- `crewmaster providers` - Manage LLM provider configurations
+- `crewaimaster create` - Create intelligent multi-agent crews
+- `crewaimaster run` - Execute crews with real-time monitoring
+- `crewaimaster providers` - Manage LLM provider configurations
 - Built-in safety measures and guardrails
 - Extensible architecture with plugin support
 - Rich CLI with progress indicators and feedback
 
-[unreleased]: https://github.com/VishApp/crewmaster/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/VishApp/crewmaster/releases/tag/v0.1.0
+[unreleased]: https://github.com/VishApp/crewaimaster/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/VishApp/crewaimaster/releases/tag/v0.1.0

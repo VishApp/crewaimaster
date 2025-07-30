@@ -1,5 +1,5 @@
 """
-Crew Designer module for CrewMaster.
+Crew Designer module for CrewAIMaster.
 
 This module handles the creation and management of CrewAI crews based on 
 task analysis and agent specifications.
@@ -263,10 +263,11 @@ class CrewDesigner:
                     )
                     print(f"🔧 DEBUG: Created custom LLM with base_url={config.llm.base_url}")
                 else:
-                    # For standard providers (openai, anthropic, google), let CrewAI auto-detect
-                    # It will use OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY env vars
+                    # For standard providers (openai, anthropic, google), pass API key explicitly
                     agent_llm = LLM(
                         model=config.llm.model,
+                        api_key=config.llm.api_key,
+                        base_url=config.llm.base_url,
                         temperature=config.llm.temperature,
                         max_tokens=config.llm.max_tokens
                     )
@@ -319,9 +320,11 @@ class CrewDesigner:
                 )
                 print(f"🔧 DEBUG: Created custom model LLM with base_url={config.llm.base_url}")
             else:
-                # For standard providers (openai, anthropic, google), let CrewAI auto-detect
+                # For standard providers (openai, anthropic, google), pass API key explicitly
                 agent_llm = LLM(
                     model=config.llm.model,
+                    api_key=config.llm.api_key,
+                    base_url=config.llm.base_url,
                     temperature=config.llm.temperature,
                     max_tokens=config.llm.max_tokens
                 )
@@ -590,7 +593,7 @@ Input: {input_data}
 For real functionality:
 1. Configure required API keys in your environment
 2. Install required dependencies 
-3. Restart CrewMaster
+3. Restart CrewAIMaster
 
 Mock result: Simulated {tool_name} operation completed successfully with input: {input_data[:100]}{"..." if len(input_data) > 100 else ""}"""
             
@@ -978,7 +981,7 @@ START BY USING YOUR TOOLS TO GATHER CURRENT INFORMATION BEFORE GENERATING ANY RE
         try:
             import pickle
             import os
-            cache_file = "/tmp/crewmaster_cache.pkl"
+            cache_file = "/tmp/crewaimaster_cache.pkl"
             if os.path.exists(cache_file):
                 with open(cache_file, 'rb') as f:
                     data = pickle.load(f)
@@ -991,7 +994,7 @@ START BY USING YOUR TOOLS TO GATHER CURRENT INFORMATION BEFORE GENERATING ANY RE
         """Save cache to file."""
         try:
             import pickle
-            cache_file = "/tmp/crewmaster_cache.pkl"
+            cache_file = "/tmp/crewaimaster_cache.pkl"
             data = {'crews': self._crews_cache}
             with open(cache_file, 'wb') as f:
                 pickle.dump(data, f)

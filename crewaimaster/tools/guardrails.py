@@ -1,5 +1,5 @@
 """
-Guardrails system for CrewMaster.
+Guardrails system for CrewAIMaster.
 
 This module provides safety and quality controls for agent operations.
 """

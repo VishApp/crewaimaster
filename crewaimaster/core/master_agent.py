@@ -1,5 +1,5 @@
 """
-Master Agent for CrewMaster.
+Master Agent for CrewAIMaster.
 
 This is the main orchestrator that ties together task analysis, crew design,
 agent management, and execution.
@@ -34,7 +34,7 @@ class LogEntry:
         self.level = level
 
 class MasterAgent:
-    """Main orchestrator for CrewMaster operations."""
+    """Main orchestrator for CrewAIMaster operations."""
     
     def __init__(self, config: Config):
         """Initialize the master agent."""
@@ -87,7 +87,7 @@ class MasterAgent:
         import os
         from datetime import datetime
         
-        stats_file = "/tmp/crewmaster_execution_stats.pkl"
+        stats_file = "/tmp/crewaimaster_execution_stats.pkl"
         
         # Load existing stats
         try:
@@ -138,7 +138,7 @@ class MasterAgent:
         import pickle
         import os
         
-        stats_file = "/tmp/crewmaster_execution_stats.pkl"
+        stats_file = "/tmp/crewaimaster_execution_stats.pkl"
         
         try:
             if os.path.exists(stats_file):
@@ -392,7 +392,7 @@ class MasterAgent:
                 for agent in crew.agents
             ],
             "export_timestamp": datetime.now(timezone.utc).isoformat(),
-            "crewmaster_version": "0.1.0"
+            "crewaimaster_version": "0.1.0"
         }
     
     def import_crew_config(self, config_data: Dict[str, Any]) -> Optional[CrewModel]:

@@ -1,5 +1,5 @@
 """
-Tool Designer Agent for CrewMaster.
+Tool Designer Agent for CrewAIMaster.
 
 This agent analyzes user requirements and generates proper CrewAI custom tools
 with complete code implementation following the BaseTool pattern.
@@ -94,7 +94,7 @@ class ToolDesignerAgent:
         test_code = self._generate_test_code(requirement)
         
         # Determine file path
-        file_path = f"/tmp/crewmaster_custom_tools/{requirement.name.lower()}_tool.py"
+        file_path = f"/tmp/crewaimaster_custom_tools/{requirement.name.lower()}_tool.py"
         
         return GeneratedTool(
             name=requirement.name,
@@ -338,10 +338,10 @@ class ToolDesignerAgent:
         """Generate tool registration code."""
         return f'''# Registration code for {req.name}
 from typing import Dict, Any, Optional
-from crewmaster.tools.registry import ToolRegistry, ToolBase
+from crewaimaster.tools.registry import ToolRegistry, ToolBase
 
 class {req.name}Wrapper(ToolBase):
-    """Wrapper to make {req.name} compatible with CrewMaster registry."""
+    """Wrapper to make {req.name} compatible with CrewAIMaster registry."""
     
     def __init__(self):
         self.tool_instance = {req.name}()
@@ -366,7 +366,7 @@ class {req.name}Wrapper(ToolBase):
         return self.tool_instance(*args, **kwargs)
 
 def register_{req.name.lower()}():
-    """Register the {req.name} with CrewMaster."""
+    """Register the {req.name} with CrewAIMaster."""
     registry = ToolRegistry()
     wrapped_tool = {req.name}Wrapper()
     registry.register_tool(wrapped_tool)

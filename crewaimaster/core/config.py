@@ -1,5 +1,5 @@
 """
-Configuration management for CrewMaster.
+Configuration management for CrewAIMaster.
 """
 
 import os
@@ -35,8 +35,8 @@ class ToolConfig(BaseModel):
     max_tools_per_agent: int = 5
     custom_tools_path: Optional[str] = None
 
-class CrewMasterConfig(BaseModel):
-    """Main CrewMaster configuration."""
+class crewaimasterConfig(BaseModel):
+    """Main CrewAIMaster configuration."""
     llm: LLMConfig = Field(default_factory=LLMConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
     tools: ToolConfig = Field(default_factory=ToolConfig)
@@ -56,7 +56,7 @@ class CrewMasterConfig(BaseModel):
     debug_mode: bool = False
 
 class Config:
-    """Configuration manager for CrewMaster."""
+    """Configuration manager for CrewAIMaster."""
     
     def __init__(self, config_path: Optional[str] = None):
         """Initialize configuration."""
@@ -65,33 +65,33 @@ class Config:
     
     def _get_default_config_path(self) -> str:
         """Get default configuration file path."""
-        # First check for .crewmaster/config.yaml in current directory
-        local_config = Path(".crewmaster/config.yaml")
+        # First check for .crewaimaster/config.yaml in current directory
+        local_config = Path(".crewaimaster/config.yaml")
         if local_config.exists():
             return str(local_config)
         
         # Fallback to home directory
-        config_dir = Path.home() / ".crewmaster"
+        config_dir = Path.home() / ".crewaimaster"
         config_dir.mkdir(exist_ok=True)
         return str(config_dir / "config.yaml")
     
-    def _load_config(self) -> CrewMasterConfig:
+    def _load_config(self) -> crewaimasterConfig:
         """Load configuration from file or create default."""
         if os.path.exists(self.config_path):
             try:
                 with open(self.config_path, 'r') as f:
                     config_data = yaml.safe_load(f) or {}
-                return CrewMasterConfig(**config_data)
+                return crewaimasterConfig(**config_data)
             except Exception as e:
                 print(f"Warning: Failed to load config from {self.config_path}: {e}")
                 print("Using default configuration.")
         
         # Create default config and save it
-        config = CrewMasterConfig()
+        config = crewaimasterConfig()
         self.save_config(config)
         return config
     
-    def save_config(self, config: Optional[CrewMasterConfig] = None):
+    def save_config(self, config: Optional[crewaimasterConfig] = None):
         """Save configuration to file."""
         config_to_save = config or self._config
         
@@ -139,7 +139,7 @@ class Config:
         return self._config.tools
     
     def update_from_env(self):
-        """Update configuration from environment variables. (DISABLED - Use .crewmaster/config.yaml only)"""
-        # Environment variable override is disabled to force users to use .crewmaster/config.yaml
+        """Update configuration from environment variables. (DISABLED - Use .crewaimaster/config.yaml only)"""
+        # Environment variable override is disabled to force users to use .crewaimaster/config.yaml
         # This ensures all configuration is managed through the CLI and config file
         pass

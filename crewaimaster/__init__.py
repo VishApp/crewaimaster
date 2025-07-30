@@ -1,5 +1,5 @@
 """
-CrewMaster: A Python package for building intelligent multi-agent systems using CrewAI.
+CrewAIMaster: A Python package for building intelligent multi-agent systems using CrewAI.
 
 This package provides a CLI and framework for automatically generating, managing,
 and executing multi-agent crews based on natural language tasks.
@@ -20,8 +20,8 @@ warnings.filterwarnings("ignore", message=".*event loop.*")
 os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
 
 __version__ = "0.1.0"
-__author__ = "CrewMaster Team"
-__email__ = "team@crewmaster.dev"
+__author__ = "CrewAIMaster Team"
+__email__ = "team@crewaimaster.dev"
 
 from .core.master_agent_crew import MasterAgentCrew
 from .core.file_generator import CrewFileGenerator

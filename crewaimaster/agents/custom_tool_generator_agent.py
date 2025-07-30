@@ -1,5 +1,5 @@
 """
-Custom Tool Generator Agent for CrewMaster.
+Custom Tool Generator Agent for CrewAIMaster.
 
 This agent uses CrewAI to intelligently analyze tool requirements and generate
 proper CrewAI BaseTool implementations with complete code and documentation.
@@ -49,7 +49,7 @@ class CustomToolGeneratorAgent:
     def __init__(self, llm_config: Optional[Dict[str, Any]] = None):
         """Initialize the custom tool generator agent."""
         self.llm_config = llm_config or {}
-        self.tools_directory = Path("/tmp/crewmaster_custom_tools")
+        self.tools_directory = Path("/tmp/crewaimaster_custom_tools")
         self.tools_directory.mkdir(exist_ok=True)
         
         # Create the analysis agent
@@ -157,7 +157,7 @@ class CustomToolGeneratorAgent:
                - Proper args_schema: Type[BaseModel] = InputSchemaClass
                - Complete _run method implementation with real functionality
                - Proper error handling and logging
-            4. **ToolBase wrapper class** for CrewMaster registry integration
+            4. **ToolBase wrapper class** for CrewAIMaster registry integration
             5. **Registration function** that registers with ToolRegistry
             6. **Test function** that validates the tool works
             7. **Complete documentation** with docstrings and comments
@@ -281,7 +281,7 @@ class CustomToolGeneratorAgent:
             
             # Handle validation results
             if validation_passed:
-                self._register_tool_with_crewmaster(tool_file_path, tool_name)
+                self._register_tool_with_crewaimaster(tool_file_path, tool_name)
             else:
                 # Ask user if they want to save the tool anyway
                 if not auto_confirm:
@@ -509,10 +509,10 @@ class CustomToolGeneratorAgent:
         except Exception as e:
             print(f"❌ Error during installation: {str(e)}")
     
-    def _register_tool_with_crewmaster(self, tool_file_path: str, tool_name: str):
-        """Register the generated tool with CrewMaster tool registry."""
+    def _register_tool_with_crewaimaster(self, tool_file_path: str, tool_name: str):
+        """Register the generated tool with CrewAIMaster tool registry."""
         try:
-            print(f"📋 Registering {tool_name} with CrewMaster...")
+            print(f"📋 Registering {tool_name} with CrewAIMaster...")
             
             # Import and execute the registration function
             spec = importlib.util.spec_from_file_location(

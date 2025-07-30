@@ -117,9 +117,11 @@ class AgentDesignerAgent:
                     max_tokens=self.llm_config.get("max_tokens", 2000)
                 )
             else:
-                # For standard providers, let CrewAI auto-detect from env vars
+                # For standard providers, pass API key explicitly
                 return LLM(
                     model=self.llm_config.get("model", "gpt-4"),
+                    api_key=self.llm_config.get("api_key"),
+                    base_url=self.llm_config.get("base_url"),
                     temperature=self.llm_config.get("temperature", 0.7),
                     max_tokens=self.llm_config.get("max_tokens", 2000)
                 )
@@ -180,7 +182,7 @@ class AgentDesignerAgent:
             - Ensure diversity and authenticity in character development
             
             🔧 TECHNICAL OPTIMIZATION:
-            - Select 2-4 most appropriate tools from: SerperDevTool, FileReadTool, ScrapeWebsiteTool, GithubSearchTool, YoutubeVideoSearchTool, YoutubeChannelSearchTool, CodeInterpreterTool, PDFSearchTool, DOCXSearchTool, CSVSearchTool, JSONSearchTool, XMLSearchTool, TXTSearchTool, MDXSearchTool, DirectoryReadTool, DirectorySearchTool, PGSearchTool, BrowserbaseLoadTool, FirecrawlScrapeWebsiteTool, WebsiteSearchTool, EXASearchTool
+            - Select 2-4 most appropriate tools from: WebsiteSearchTool, SerperDevTool, FileReadTool, ScrapeWebsiteTool, GithubSearchTool, YoutubeVideoSearchTool, YoutubeChannelSearchTool, CodeInterpreterTool, PDFSearchTool, DOCXSearchTool, CSVSearchTool, JSONSearchTool, XMLSearchTool, TXTSearchTool, MDXSearchTool, DirectoryReadTool, DirectorySearchTool, PGSearchTool, BrowserbaseLoadTool, FirecrawlScrapeWebsiteTool, EXASearchTool
             - Match tools precisely to role requirements and task context
             - Optimize memory type based on task duration and complexity
             - Set appropriate iteration limits for efficiency
@@ -277,7 +279,7 @@ class AgentDesignerAgent:
                     role=design_request.role,
                     goal=json_data.get('goal', self._extract_goal_from_result(design_result, design_request.role)),
                     backstory=json_data.get('backstory', self._extract_backstory_from_result(design_result, design_request.role)),
-                    tools=self._convert_ai_tools_to_crewmaster_tools(json_data.get('recommendedTools', [])),
+                    tools=self._convert_ai_tools_to_crewaimaster_tools(json_data.get('recommendedTools', [])),
                     memory_type=json_data.get('memoryType', 'short_term'),
                     max_iterations=json_data.get('maxIterations', 5),
                     allow_delegation=json_data.get('allowDelegation', len(design_request.required_capabilities) > 1)
@@ -297,7 +299,7 @@ class AgentDesignerAgent:
             allow_delegation=len(design_request.required_capabilities) > 1
         )
     
-    def _convert_ai_tools_to_crewmaster_tools(self, ai_tools: List[str]) -> List[str]:
+    def _convert_ai_tools_to_crewaimaster_tools(self, ai_tools: List[str]) -> List[str]:
         """Convert AI-suggested tools to actual CrewAI tool names."""
         # Valid CrewAI tools (exact names from CrewAI documentation)
         valid_crewai_tools = {

@@ -8,7 +8,6 @@ and generate detailed crew specifications with intelligent reasoning.
 from typing import Dict, List, Any, Optional
 from crewai import Agent, Task, Crew
 from crewai.tools import BaseTool
-from crewai_tools import SerperDevTool
 from pydantic import BaseModel, Field
 from ..core.task_analyzer import TaskComplexity, AgentRole, TaskRequirement, AgentSpec, CrewSpec
 
@@ -101,9 +100,11 @@ class TaskAnalyzerAgent:
                     max_tokens=self.llm_config.get("max_tokens", 2000)
                 )
             else:
-                # For standard providers, let CrewAI auto-detect from env vars
+                # For standard providers, pass API key explicitly
                 return LLM(
                     model=self.llm_config.get("model", "gpt-4"),
+                    api_key=self.llm_config.get("api_key"),
+                    base_url=self.llm_config.get("base_url"),
                     temperature=self.llm_config.get("temperature", 0.7),
                     max_tokens=self.llm_config.get("max_tokens", 2000)
                 )
@@ -287,9 +288,10 @@ class TaskAnalyzerAgent:
             # Use AI-generated specs if available, otherwise create intelligent defaults
             if i < len(ai_agents) and ai_agents[i]:
                 ai_agent = ai_agents[i]
+                specific_role = self._extract_agent_role(analysis_result, role, original_task)
                 agent_spec = AgentSpec(
-                    role=role,
-                    name=ai_agent.get('name', f"{role}_agent_{i+1}"),
+                    role=specific_role,
+                    name=ai_agent.get('name', f"{specific_role}_agent_{i+1}"),
                     goal=ai_agent.get('goal', self._extract_agent_goal(analysis_result, role, original_task)),
                     backstory=ai_agent.get('backstory', self._extract_agent_backstory(analysis_result, role)),
                     required_tools=ai_agent.get('tools', self._extract_agent_tools(analysis_result, role)),
@@ -299,13 +301,14 @@ class TaskAnalyzerAgent:
                 )
             else:
                 # Fallback to extracted information
+                specific_role = self._extract_agent_role(analysis_result, role, actual_task)
                 agent_goal = self._extract_agent_goal(analysis_result, role, actual_task)
                 agent_backstory = self._extract_agent_backstory(analysis_result, role)
                 agent_tools = self._extract_agent_tools(analysis_result, role)
                 
                 agent_spec = AgentSpec(
-                    role=role,
-                    name=f"{role}_agent_{i+1}",
+                    role=specific_role,
+                    name=f"{specific_role}_agent_{i+1}",
                     goal=agent_goal,
                     backstory=agent_backstory,
                     required_tools=agent_tools,
@@ -669,6 +672,92 @@ class TaskAnalyzerAgent:
         # Default: add execution emphasis
         return f"actively execute and deliver results for: {task}"
     
+    def _extract_agent_role(self, analysis: str, base_role: str, task: str) -> str:
+        """Generate a specific, contextual role using AI analysis."""
+        
+        # Create a prompt to generate a specific role based on the task and analysis
+        role_prompt = f"""
+        Based on this task: "{task}"
+        And this analysis: "{analysis}"
+        
+        Generate a specific, descriptive role for a {base_role} agent that would be perfect for this task.
+        
+        The role should be:
+        - Specific and descriptive (not just generic like "writer" or "analyst")
+        - Contextually relevant to the task domain
+        - Professional and clear
+        - Follow the pattern: "[Domain/Context] [Specific Function]"
+        
+        Examples of good roles:
+        - "LinkedIn Content Strategy Specialist"
+        - "Technical Documentation Expert" 
+        - "Social Media Analytics Researcher"
+        - "Brand Storytelling Creator"
+        - "Data Visualization Analyst"
+        
+        Generate ONLY the role title, nothing else.
+        """
+        
+        try:
+            # Use the LLM to generate a contextual role
+            from crewai import LLM
+            import os
+            
+            # Use available LLM
+            if os.getenv('OPENAI_API_KEY'):
+                llm = LLM(model='gpt-4o-mini', temperature=0.3)
+            elif os.getenv('ANTHROPIC_API_KEY'):
+                llm = LLM(model='claude-3-haiku-20240307', temperature=0.3)
+            else:
+                # Fallback to a descriptive role if no LLM available
+                return self._generate_fallback_role(base_role, task)
+            
+            # Generate the role using LLM
+            response = llm.call([{"role": "system", "content": "You are a professional role generator."}, 
+                               {"role": "user", "content": role_prompt}])
+            
+            generated_role = response.strip().strip('"').strip()
+            
+            # Validate and clean the generated role
+            if len(generated_role) > 5 and len(generated_role) < 100:
+                return generated_role
+            else:
+                return self._generate_fallback_role(base_role, task)
+                
+        except Exception as e:
+            print(f"Warning: Could not generate AI role, using fallback: {e}")
+            return self._generate_fallback_role(base_role, task)
+    
+    def _generate_fallback_role(self, base_role: str, task: str) -> str:
+        """Generate a descriptive fallback role when AI generation fails."""
+        task_lower = task.lower()
+        
+        # Context-based role generation
+        if any(word in task_lower for word in ['blog', 'article', 'content', 'post', 'social media', 'linkedin']):
+            context = "Social Media Content"
+        elif any(word in task_lower for word in ['data', 'analysis', 'report', 'research']):
+            context = "Data & Analytics"
+        elif any(word in task_lower for word in ['code', 'software', 'app', 'develop']):
+            context = "Software Development"
+        elif any(word in task_lower for word in ['marketing', 'campaign', 'brand']):
+            context = "Marketing & Brand"
+        else:
+            context = "Professional"
+        
+        role_titles = {
+            "researcher": f"{context} Research Specialist",
+            "writer": f"{context} Content Creator",
+            "analyst": f"{context} Strategy Analyst", 
+            "developer": f"{context} Solution Developer",
+            "reviewer": f"{context} Quality Specialist",
+            "manager": f"{context} Project Manager",
+            "coordinator": f"{context} Operations Coordinator",
+            "specialist": f"{context} Domain Expert",
+            "designer": f"{context} Experience Designer"
+        }
+        
+        return role_titles.get(base_role, f"{context} {base_role.title()} Specialist")
+
     def _extract_agent_backstory(self, analysis: str, role: str) -> str:
         """Extract agent-specific backstory from analysis."""
         role_backstories = {
@@ -731,7 +820,7 @@ class TaskAnalyzerAgent:
                         'name': agent.get('agentName', ''),
                         'goal': agent.get('goal', ''),
                         'backstory': agent.get('backstory', ''),
-                        'tools': self._convert_ai_tools_to_crewmaster_tools(agent.get('tools', []))
+                        'tools': self._convert_ai_tools_to_crewaimaster_tools(agent.get('tools', []))
                     }
                     print(f"🔧 DEBUG: Agent spec {i+1}: {spec['name']} ({agent.get('role', 'Unknown role')})")
                     agent_specs.append(spec)
@@ -742,7 +831,7 @@ class TaskAnalyzerAgent:
         
         return []
     
-    def _convert_ai_tools_to_crewmaster_tools(self, ai_tools: List[str]) -> List[str]:
+    def _convert_ai_tools_to_crewaimaster_tools(self, ai_tools: List[str]) -> List[str]:
         """Convert AI-suggested tools to actual CrewAI tool names."""
         # Valid CrewAI tools (exact names from CrewAI documentation)
         valid_crewai_tools = {

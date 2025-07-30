@@ -160,13 +160,13 @@ cython_debug/
 #  and not all of them are using PyCharm.
 .idea/
 
-# CrewMaster specific
+# CrewAIMaster specific
 *.db
 *.sqlite3
-.crewmaster/
+.crewaimaster/
 vector_stores/
 logs/
-crewmaster.zip
+crewaimaster.zip
 crews/
 db/
 

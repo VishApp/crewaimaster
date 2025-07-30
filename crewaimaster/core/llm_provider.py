@@ -27,13 +27,12 @@ class OpenAIProvider(LLMProvider):
     def get_llm_config(self, config) -> Dict[str, Any]:
         return {
             "model": config.llm.model or "gpt-4",
-            "api_key": config.llm.api_key or os.getenv('OPENAI_API_KEY'),
+            "api_key": config.llm.api_key,
             "base_url": config.llm.base_url
         }
     
     def validate_config(self, config) -> bool:
-        api_key = config.llm.api_key or os.getenv('OPENAI_API_KEY')
-        return bool(api_key)
+        return bool(config.llm.api_key)
 
 
 class GoogleProvider(LLMProvider):
@@ -42,16 +41,14 @@ class GoogleProvider(LLMProvider):
     def get_llm_config(self, config) -> Dict[str, Any]:
         return {
             "model": config.llm.model or "gemini-pro",
-            "api_key": config.llm.api_key or os.getenv('GOOGLE_API_KEY'),
-            "project_id": config.llm.project_id or os.getenv('GOOGLE_CLOUD_PROJECT'),
-            "region": config.llm.region or os.getenv('GOOGLE_CLOUD_REGION', 'us-central1'),
-            "auth_file": config.llm.auth_file or os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+            "api_key": config.llm.api_key,
+            "project_id": config.llm.project_id,
+            "region": config.llm.region or 'us-central1',
+            "auth_file": config.llm.auth_file
         }
     
     def validate_config(self, config) -> bool:
-        api_key = config.llm.api_key or os.getenv('GOOGLE_API_KEY')
-        auth_file = config.llm.auth_file or os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-        return bool(api_key or auth_file)
+        return bool(config.llm.api_key or config.llm.auth_file)
 
 
 class AnthropicProvider(LLMProvider):
@@ -60,13 +57,12 @@ class AnthropicProvider(LLMProvider):
     def get_llm_config(self, config) -> Dict[str, Any]:
         return {
             "model": config.llm.model or "claude-3-sonnet-20240229",
-            "api_key": config.llm.api_key or os.getenv('ANTHROPIC_API_KEY'),
+            "api_key": config.llm.api_key,
             "base_url": config.llm.base_url
         }
     
     def validate_config(self, config) -> bool:
-        api_key = config.llm.api_key or os.getenv('ANTHROPIC_API_KEY')
-        return bool(api_key)
+        return bool(config.llm.api_key)
 
 
 class DeepSeekProvider(LLMProvider):
@@ -75,13 +71,12 @@ class DeepSeekProvider(LLMProvider):
     def get_llm_config(self, config) -> Dict[str, Any]:
         return {
             "model": config.llm.model or "deepseek-chat",
-            "api_key": config.llm.api_key or os.getenv('DEEPSEEK_API_KEY'),
+            "api_key": config.llm.api_key,
             "base_url": config.llm.base_url or "https://api.deepseek.com/v1"
         }
     
     def validate_config(self, config) -> bool:
-        api_key = config.llm.api_key or os.getenv('DEEPSEEK_API_KEY')
-        return bool(api_key)
+        return bool(config.llm.api_key)
 
 
 class CustomProvider(LLMProvider):

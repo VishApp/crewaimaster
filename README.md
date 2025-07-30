@@ -1,8 +1,8 @@
-# CrewMaster
+# CrewAIMaster
 
 **A Python package for building intelligent multi-agent systems using CrewAI**
 
-CrewMaster is an advanced framework that automatically generates, manages, and executes multi-agent crews based on natural language task descriptions. It provides a CLI interface and comprehensive backend system for creating intelligent AI agents with memory, tools, and safety guardrails.
+CrewAIMaster is an advanced framework that automatically generates, manages, and executes multi-agent crews based on natural language task descriptions. It provides a CLI interface and comprehensive backend system for creating intelligent AI agents with memory, tools, and safety guardrails.
 
 ## 🚀 Key Features
 
@@ -13,7 +13,7 @@ CrewMaster is an advanced framework that automatically generates, manages, and e
 - **Performance Optimization**: AI-driven optimization of crew composition and execution
 
 ### 🎯 **Developer Experience**
-- **One-Command Creation**: `crewmaster create "your task description"`
+- **One-Command Creation**: `crewaimaster create "your task description"`
 - **Rich CLI Interface**: Beautiful terminal UI with progress indicators and feedback
 - **Flexible Configuration**: Environment variables, YAML configs, and CLI options
 - **Extensible Architecture**: Plugin system for custom agents, tools, and workflows
@@ -22,17 +22,17 @@ CrewMaster is an advanced framework that automatically generates, manages, and e
 
 ```bash
 # Install from source (recommended for development)
-git clone https://github.com/yourusername/crewmaster
-cd crewmaster
+git clone https://github.com/VishApp/crewaimaster
+cd crewaimaster
 pip install -e .
 
 # Or install from PyPI (when available)
-pip install crewmaster
+pip install crewaimaster
 ```
 
 ### Dependencies
 
-CrewMaster requires Python 3.9+ and the following packages:
+CrewAIMaster requires Python 3.9+ and the following packages:
 - `crewai>=0.70.0` - Core multi-agent framework
 - `click>=8.0.0` - CLI interface
 - `sqlalchemy>=2.0.0` - Database ORM
@@ -47,17 +47,17 @@ CrewMaster requires Python 3.9+ and the following packages:
 python --version
 
 # Configure your LLM provider (see supported providers)
-crewmaster providers
+crewaimaster providers
 
 # Quick setup with OpenAI (most common)
-crewmaster providers --configure openai --api-key "your-openai-key" --model "gpt-4"
+crewaimaster providers --configure openai --api-key "your-openai-key" --model "gpt-4"
 ```
 
 ### 1. Create Your First Crew with AI Orchestration
 
 ```bash
 # Create an intelligent crew using AI analysis
-crewmaster create "Write a comprehensive market analysis report for electric vehicles in 2024" --name electric_vehicles_market_analysis_crew
+crewaimaster create "Write a comprehensive market analysis report for electric vehicles in 2024" --name electric_vehicles_market_analysis_crew
 
 # Output with AI orchestration:
 # 🤖 Using AI orchestration for intelligent crew creation
@@ -78,10 +78,10 @@ crewmaster create "Write a comprehensive market analysis report for electric veh
 
 ```bash
 # Run the crew (requires configured LLM provider)
-crewmaster run electric_vehicles_market_analysis_crew
+crewaimaster run electric_vehicles_market_analysis_crew
 
 # With additional context:
-crewmaster run electric_vehicles_market_analysis_crew --input "Focus on Tesla, BMW, and Volkswagen specifically"
+crewaimaster run electric_vehicles_market_analysis_crew --input "Focus on Tesla, BMW, and Volkswagen specifically"
 
 # Output:
 # 🏃 Running crew: electric_vehicles_market_analysis_crew
@@ -105,17 +105,17 @@ cd crews/electric_vehicles_market_analysis_crew
 export OPENAI_API_KEY="your-openai-key"
 ./run.sh
 
-# Or run using CrewMaster-specific environment variables
-export CREWMASTER_LLM_PROVIDER="openai"
-export CREWMASTER_LLM_MODEL="gpt-4"
-export CREWMASTER_LLM_API_KEY="your-openai-key"
-export CREWMASTER_LLM_BASE_URL="https://api.openai.com/v1"
+# Or run using CrewAIMaster-specific environment variables
+export CREWAIMASTER_LLM_PROVIDER="openai"
+export CREWAIMASTER_LLM_MODEL="gpt-4"
+export CREWAIMASTER_LLM_API_KEY="your-openai-key"
+export CREWAIMASTER_LLM_BASE_URL="https://api.openai.com/v1"
 python src/electric_vehicles_market_analysis_crew/main.py
 ```
 
 ## 🔄 Development Workflow
 
-### Typical CrewMaster Workflow
+### Typical CrewAIMaster Workflow
 
 ```mermaid
 flowchart LR
@@ -156,125 +156,99 @@ flowchart LR
 
 ## 🏗️ Architecture
 
-CrewMaster follows a layered, modular architecture with AI-powered orchestration:
+CrewAIMaster follows a clean, layered architecture designed for intelligent multi-agent system creation and execution:
 
 ```mermaid
-graph TB
-    %% User Interface & Configuration
-    subgraph "🎯 User Interface & Configuration"
-        CLI[CLI Interface<br/>• Rich Terminal UI<br/>• Command Processing<br/>• User Interactions]
-        CONFIG[Configuration System<br/>• .crewmaster/config.yaml<br/>• Provider Management<br/>• Settings Persistence]
-        PROVIDERS[LLM Providers<br/>• OpenAI, Anthropic, Google<br/>• DeepSeek, Custom<br/>• Auto Base URL Setup]
-    end
+flowchart TD
+    %% User Entry Point
+    User[👤 User Input<br/>Natural Language Task] --> CLI[🖥️ CLI Interface<br/>crewaimaster create/run/providers]
     
-    %% AI Orchestration Layer
-    subgraph "🤖 AI Master Agent System"
-        MAC[MasterAgentCrew<br/>• Main Orchestrator<br/>• AI-Powered Decisions<br/>• Intelligent Crew Creation]
-        
-        subgraph "AI Specialists"
-            TAA[TaskAnalyzerAgent<br/>• NLP Task Analysis<br/>• Complexity Assessment<br/>• Requirements Extraction]
-            ADA[AgentDesignerAgent<br/>• Role-Based Design<br/>• Tool Assignment<br/>• Agent Optimization]
-            COA[CrewOrchestratorAgent<br/>• Crew Assembly<br/>• Process Selection<br/>• Performance Prediction]
-        end
-    end
+    %% Configuration Layer
+    CLI --> Config[⚙️ Configuration<br/>config.yaml<br/>LLM Providers]
     
-    %% Core Engine
-    subgraph "⚙️ Core Processing Engine"
-        CD[CrewDesigner<br/>• File-Based Generation<br/>• CrewAI Integration<br/>• YAML Configuration]
-        FG[FileGenerator<br/>• Project Structure<br/>• Python Modules<br/>• Documentation]
-        LP[LLMProvider Factory<br/>• Provider Abstraction<br/>• Model Configuration<br/>• API Management]
-    end
+    %% AI Orchestration Core
+    CLI --> MasterAgent[🧠 Master Agent<br/>Intelligent Orchestrator]
     
-    %% File System & Generation
-    subgraph "📁 File System & Generation"
-        CREWS[Crews Directory<br/>• Generated Projects<br/>• YAML Configs<br/>• Python Modules]
-        YAML[Configuration Files<br/>• agents.yaml<br/>• tasks.yaml<br/>• settings.yaml]
-        PY[Python Modules<br/>• crew.py<br/>• main.py<br/>• __init__.py]
-        SCRIPTS[Execution Scripts<br/>• run.sh<br/>• requirements.txt<br/>• README.md]
-    end
+    %% AI Analysis Pipeline
+    MasterAgent --> TaskAnalyzer[📋 Task Analyzer<br/>• Complexity Assessment<br/>• Requirements Extraction<br/>• Agent Planning]
     
-    %% CrewAI Integration
-    subgraph "🔄 CrewAI Execution Engine"
-        CREWAI[CrewAI Framework<br/>• Multi-Agent Coordination<br/>• Task Execution<br/>• Process Management]
-        AGENTS[Generated Agents<br/>• Specialized Roles<br/>• Tool Integration<br/>• Memory Management]
-        TASKS[Agent Tasks<br/>• Sequential/Hierarchical<br/>• Context Sharing<br/>• Output Processing]
-    end
+    TaskAnalyzer --> AgentDesigner[👥 Agent Designer<br/>• Role Definition<br/>• Tool Selection<br/>• Capability Mapping]
     
-    %% Tool Ecosystem
-    subgraph "🛠️ Tool Ecosystem"
-        TR[Tool Registry<br/>• Built-in Tools<br/>• CrewAI Tools<br/>• Tool Validation]
-        TOOLS[Available Tools<br/>• SerperDevTool<br/>• FileReadTool<br/>• ScrapeWebsiteTool<br/>• CodeInterpreterTool<br/>• Custom Tools]
-    end
+    AgentDesigner --> CrewOrchestrator[🎭 Crew Orchestrator<br/>• Team Assembly<br/>• Process Selection<br/>• Workflow Design]
     
-    %% Data & Caching
-    subgraph "💾 Data & Caching System"
-        CACHE[Analysis Cache<br/>• Task Analysis Results<br/>• Performance Metrics<br/>• Temporary Data]
-        STATS[Execution Stats<br/>• Performance Tracking<br/>• Success Rates<br/>• Usage Analytics]
-    end
+    %% Core Generation Engine
+    CrewOrchestrator --> CrewDesigner[🔧 Crew Designer<br/>File-Based Generator]
+    Config --> CrewDesigner
     
-    %% User Flow
-    CLI --> CONFIG
-    CLI --> MAC
-    CONFIG --> PROVIDERS
-    PROVIDERS --> LP
+    CrewDesigner --> FileGen[📁 File Generator<br/>• Project Structure<br/>• Python Modules<br/>• YAML Configs]
     
-    %% AI Orchestration Flow
-    MAC --> TAA
-    MAC --> ADA
-    MAC --> COA
-    MAC --> CD
+    %% Output Generation
+    FileGen --> GeneratedFiles{📄 Generated Crew Project}
     
-    %% Core Processing Flow
-    CD --> LP
-    CD --> FG
-    CD --> CREWAI
+    %% Generated Project Structure
+    GeneratedFiles --> AgentYAML[agents.yaml<br/>Agent Definitions]
+    GeneratedFiles --> TaskYAML[tasks.yaml<br/>Task Specifications]
+    GeneratedFiles --> CrewPY[crew.py<br/>CrewAI Implementation]
+    GeneratedFiles --> MainPY[main.py<br/>Execution Entry Point]
     
-    %% File Generation Flow
-    FG --> CREWS
-    FG --> YAML
-    FG --> PY
-    FG --> SCRIPTS
+    %% Execution Runtime
+    MainPY --> CrewAI[🚀 CrewAI Runtime<br/>Multi-Agent Execution]
     
-    %% Execution Flow
-    CREWAI --> AGENTS
-    CREWAI --> TASKS
-    AGENTS --> TOOLS
-    TASKS --> TR
+    CrewAI --> AgentA[🤖 Agent A<br/>Specialized Role]
+    CrewAI --> AgentB[🤖 Agent B<br/>Specialized Role]
+    CrewAI --> AgentC[🤖 Agent C<br/>Specialized Role]
     
     %% Tool Integration
-    TR --> TOOLS
-    CD --> TR
+    AgentA --> Tools[🛠️ Tool Registry<br/>• Web Search<br/>• File Operations<br/>• Code Execution<br/>• Custom Tools]
+    AgentB --> Tools
+    AgentC --> Tools
     
-    %% Data Flow
-    MAC --> CACHE
-    CREWAI --> STATS
-    CD --> CACHE
+    %% LLM Integration
+    Config --> LLMProvider[🔗 LLM Provider<br/>• OpenAI<br/>• Anthropic<br/>• Google<br/>• Custom APIs]
+    LLMProvider --> AgentA
+    LLMProvider --> AgentB
+    LLMProvider --> AgentC
+    LLMProvider --> MasterAgent
     
-    %% Configuration Flow
-    CONFIG --> LP
-    CONFIG --> CD
+    %% Memory & Knowledge
+    CrewAI --> Memory[🧠 Memory System<br/>• Agent Memory<br/>• Shared Context<br/>• Knowledge Base]
+    
+    %% Safety & Guardrails
+    Tools --> Guardrails[🛡️ Guardrails<br/>• Safety Checks<br/>• Content Filtering<br/>• Validation]
+    
+    %% Final Output
+    CrewAI --> Results[📊 Results<br/>Task Completion<br/>Generated Content]
     
     %% Styling
-    classDef uiLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px,color:#000
-    classDef aiLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
-    classDef coreLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
-    classDef fileLayer fill:#fff8e1,stroke:#ff8f00,stroke-width:2px,color:#000
-    classDef execLayer fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#000
-    classDef toolLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
-    classDef dataLayer fill:#f1f8e9,stroke:#33691e,stroke-width:2px,color:#000
+    classDef userLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px,color:#000
+    classDef cliLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef aiLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+    classDef coreLayer fill:#fff8e1,stroke:#ff8f00,stroke-width:2px,color:#000
+    classDef fileLayer fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#000
+    classDef runtimeLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef toolLayer fill:#f1f8e9,stroke:#33691e,stroke-width:2px,color:#000
     
-    class CLI,CONFIG,PROVIDERS uiLayer
-    class MAC,TAA,ADA,COA aiLayer
-    class CD,FG,LP coreLayer
-    class CREWS,YAML,PY,SCRIPTS fileLayer
-    class CREWAI,AGENTS,TASKS execLayer
-    class TR,TOOLS toolLayer
-    class CACHE,STATS dataLayer
+    class User userLayer
+    class CLI,Config cliLayer
+    class MasterAgent,TaskAnalyzer,AgentDesigner,CrewOrchestrator aiLayer
+    class CrewDesigner,FileGen,LLMProvider coreLayer
+    class GeneratedFiles,AgentYAML,TaskYAML,CrewPY,MainPY fileLayer
+    class CrewAI,AgentA,AgentB,AgentC,Memory,Results runtimeLayer
+    class Tools,Guardrails toolLayer
 ```
+
+### 🔄 Data Flow Explanation
+
+1. **User Input**: Natural language task description via CLI
+2. **AI Analysis**: Master Agent analyzes complexity and requirements
+3. **Intelligent Design**: AI agents design optimal crew composition
+4. **Code Generation**: Automated creation of CrewAI project files
+5. **Execution**: Generated crew runs with real-time coordination
+6. **Results**: Task completion with generated content and insights
 
 ### 🏛️ Architecture Overview
 
-CrewMaster's architecture is designed for scalability, modularity, and intelligent automation:
+CrewAIMaster's architecture is designed for scalability, modularity, and intelligent automation:
 
 #### 🎯 **User Interface Layer**
 - **CLI Interface**: Rich terminal experience with typer and rich libraries
@@ -311,12 +285,12 @@ CrewMaster's architecture is designed for scalability, modularity, and intellige
 
 ### LLM Provider Setup
 
-CrewMaster uses a `.crewmaster/config.yaml` configuration file for all settings. Environment variables are **no longer supported** - all configuration must be done via CLI commands or direct config file editing.
+CrewAIMaster uses a `.crewaimaster/config.yaml` configuration file for all settings. Environment variables are **no longer supported** - all configuration must be done via CLI commands or direct config file editing.
 
 #### 📋 **View Available Providers**
 ```bash
 # See all supported providers and configuration examples
-crewmaster providers
+crewaimaster providers
 ```
 
 #### 🚀 **CLI Configuration (All Providers)**
@@ -325,31 +299,31 @@ Configure any supported provider using the CLI:
 
 **OpenAI:**
 ```bash
-crewmaster providers --configure openai --api-key "your-openai-key" --model "gpt-4"
+crewaimaster providers --configure openai --api-key "your-openai-key" --model "gpt-4"
 # Automatically sets base_url to https://api.openai.com/v1
 ```
 
 **Anthropic:**
 ```bash
-crewmaster providers --configure anthropic --api-key "your-anthropic-key" --model "claude-3-sonnet-20240229"
+crewaimaster providers --configure anthropic --api-key "your-anthropic-key" --model "claude-3-sonnet-20240229"
 # Automatically sets base_url to https://api.anthropic.com/v1
 ```
 
 **Google:**
 ```bash
-crewmaster providers --configure google --api-key "your-google-key" --model "gemini-pro"
+crewaimaster providers --configure google --api-key "your-google-key" --model "gemini-pro"
 # Automatically sets base_url to https://generativelanguage.googleapis.com/v1beta
 ```
 
 **DeepSeek:**
 ```bash
-crewmaster providers --configure deepseek --api-key "your-deepseek-key" --model "deepseek-chat"
+crewaimaster providers --configure deepseek --api-key "your-deepseek-key" --model "deepseek-chat"
 # Automatically sets base_url to https://api.deepseek.com/v1
 ```
 
 **Custom Provider:**
 ```bash
-crewmaster providers --configure custom --api-key "your-key" --base-url "https://api.example.com/v1" --model "gpt-4o-mini"
+crewaimaster providers --configure custom --api-key "your-key" --base-url "https://api.example.com/v1" --model "gpt-4o-mini"
 # Requires explicit base_url for custom endpoints
 ```
 
@@ -357,10 +331,10 @@ crewmaster providers --configure custom --api-key "your-key" --base-url "https:/
 
 **View Current Config:**
 ```bash
-crewmaster providers  # Shows current provider settings and configuration examples
+crewaimaster providers  # Shows current provider settings and configuration examples
 ```
 
-**Config File Location:** `.crewmaster/config.yaml` (in current directory)
+**Config File Location:** `.crewaimaster/config.yaml` (in current directory)
 
 
 #### Supported LLM Parameters
@@ -385,11 +359,11 @@ All standard LLM parameters are supported in per-agent configuration:
 
 Generated crews support environment variable overrides with the following priority:
 
-1. **CrewMaster Environment Variables** (highest priority)
-   - `CREWMASTER_LLM_PROVIDER`
-   - `CREWMASTER_LLM_MODEL`
-   - `CREWMASTER_LLM_API_KEY`
-   - `CREWMASTER_LLM_BASE_URL`
+1. **CrewAIMaster Environment Variables** (highest priority)
+   - `CREWAIMASTER_LLM_PROVIDER`
+   - `CREWAIMASTER_LLM_MODEL`
+   - `CREWAIMASTER_LLM_API_KEY`
+   - `CREWAIMASTER_LLM_BASE_URL`
 
 2. **Agent-Specific Configuration** (medium priority)
    - Values from `config/agents.yaml`
@@ -401,7 +375,7 @@ This allows for flexible deployment where you can override specific settings via
 
 ### Environment Variables for Generated Crews
 
-**Important:** While CrewMaster CLI configuration doesn't use environment variables, the **generated crews** still support them for flexibility:
+**Important:** While CrewAIMaster CLI configuration doesn't use environment variables, the **generated crews** still support them for flexibility:
 
 #### Standard Provider Environment Variables
 ```bash
@@ -412,13 +386,13 @@ export GOOGLE_API_KEY="your-google-key"
 export DEEPSEEK_API_KEY="your-deepseek-key"
 ```
 
-#### CrewMaster-Specific Environment Variables
+#### CrewAIMaster-Specific Environment Variables
 ```bash
-# CrewMaster-specific environment variables (for generated crews)
-export CREWMASTER_LLM_PROVIDER="openai"          # Provider selection
-export CREWMASTER_LLM_MODEL="gpt-4"              # Model selection  
-export CREWMASTER_LLM_API_KEY="your-api-key"     # API key
-export CREWMASTER_LLM_BASE_URL="https://api.openai.com/v1"  # Base URL
+# CrewAIMaster-specific environment variables (for generated crews)
+export CREWAIMASTER_LLM_PROVIDER="openai"          # Provider selection
+export CREWAIMASTER_LLM_MODEL="gpt-4"              # Model selection  
+export CREWAIMASTER_LLM_API_KEY="your-api-key"     # API key
+export CREWAIMASTER_LLM_BASE_URL="https://api.openai.com/v1"  # Base URL
 ```
 
 #### Other Optional Environment Variables
@@ -430,7 +404,7 @@ export SERPER_API_KEY="your-serper-key"
 
 ## 🛡️ Safety & Guardrails
 
-CrewMaster includes built-in safety measures:
+CrewAIMaster includes built-in safety measures:
 
 - **PII Detection**: Automatically detects and blocks personal information
 - **Toxicity Filtering**: Prevents harmful or offensive content
@@ -454,30 +428,16 @@ We welcome contributions! Here's how to get started:
 
 ```bash
 # Clone and setup development environment
-git clone https://github.com/VishApp/crewmaster
-cd crewmaster
+git clone https://github.com/VishApp/crewaimaster
+cd crewaimaster
 
 # Install development dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest tests/
-
-# Run linting
-black crewmaster/
-ruff check crewmaster/
+pip install -e .
 ```
-
-## 📝 Documentation
-
-- [User Guide](docs/user-guide.md) - Comprehensive usage guide
-- [API Reference](docs/api-reference.md) - Complete API documentation
-- [Developer Guide](docs/developer-guide.md) - Contributing and extending CrewMaster
-- [Examples](examples/) - Real-world usage examples
 
 ## 📄 License
 
-CrewMaster is released under the MIT License. See [LICENSE](LICENSE) for details.
+CrewAIMaster is released under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## 🙏 Acknowledgments
 
@@ -488,11 +448,8 @@ CrewMaster is released under the MIT License. See [LICENSE](LICENSE) for details
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/yourusername/crewmaster)
-- [Documentation](https://crewmaster.readthedocs.io)
-- [PyPI Package](https://pypi.org/project/crewmaster)
-- [Discord Community](https://discord.gg/crewmaster)
-
+- [GitHub Repository](https://github.com/VishApp/crewaimaster)
+- [PyPI Package](https://pypi.org/project/crewaimaster)
 ---
 
 **Built with ❤️ for the AI community**

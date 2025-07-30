@@ -1,5 +1,5 @@
 """
-File-based Crew Designer for CrewMaster.
+File-based Crew Designer for CrewAIMaster.
 
 This module creates CrewAI crews as file-based projects with YAML configurations
 and Python modules, while storing minimal metadata in the database.
