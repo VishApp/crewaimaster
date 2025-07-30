@@ -167,5 +167,22 @@ cython_debug/
 vector_stores/
 logs/
 crewmaster.zip
-crewmaster/.DS_Store
+crews/
+db/
+
+# IDE and OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp

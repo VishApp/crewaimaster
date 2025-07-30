@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A Python package for building intelligent multi-agent systems using CrewAI"
 readme = "README.md"
 authors = [
-    {name = "CrewMaster Team", email = "team@crewmaster.dev"}
+    {name = "Vishnu Prasad", email = "vishnuprasadapp@gmail.com"}
 ]
 license = {text = "MIT"}
 classifiers = [
@@ -53,10 +53,11 @@ web = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/crewmaster"
-Documentation = "https://crewmaster.readthedocs.io"
-Repository = "https://github.com/yourusername/crewmaster"
-Issues = "https://github.com/yourusername/crewmaster/issues"
+Homepage = "https://github.com/VishApp/crewmaster"
+Documentation = "https://github.com/VishApp/crewmaster#readme"
+Repository = "https://github.com/VishApp/crewmaster"
+Issues = "https://github.com/VishApp/crewmaster/issues"
+Changelog = "https://github.com/VishApp/crewmaster/blob/main/CHANGELOG.md"
 
 [project.scripts]
 crewmaster = "crewmaster.cli:main"
