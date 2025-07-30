@@ -4,20 +4,6 @@
 
 CrewAIMaster is an advanced framework that automatically generates, manages, and executes multi-agent crews based on natural language task descriptions. It provides a CLI interface and comprehensive backend system for creating intelligent AI agents with memory, tools, and safety guardrails.
 
-## 🚀 Key Features
-
-### 🤖 **AI-Powered Orchestration**
-- **Intelligent Crew Creation**: AI agents analyze tasks and design optimal multi-agent crews
-- **Advanced Task Analysis**: NLP-powered understanding of requirements and complexity
-- **Smart Agent Design**: Automatic role assignment and tool selection based on task needs
-- **Performance Optimization**: AI-driven optimization of crew composition and execution
-
-### 🎯 **Developer Experience**
-- **One-Command Creation**: `crewaimaster create "your task description"`
-- **Rich CLI Interface**: Beautiful terminal UI with progress indicators and feedback
-- **Flexible Configuration**: Environment variables, YAML configs, and CLI options
-- **Extensible Architecture**: Plugin system for custom agents, tools, and workflows
-
 ## 📦 Installation
 
 ```bash
@@ -30,20 +16,11 @@ pip install -e .
 pip install crewaimaster
 ```
 
-### Dependencies
-
-CrewAIMaster requires Python 3.9+ and the following packages:
-- `crewai>=0.70.0` - Core multi-agent framework
-- `click>=8.0.0` - CLI interface
-- `sqlalchemy>=2.0.0` - Database ORM
-- `sentence-transformers>=2.2.0` - Text embeddings
-- `faiss-cpu>=1.7.0` - Vector search
-
 ## 🏃 Quick Start
 
 ### Prerequisites
 ```bash
-# Install Python 3.9+
+# Install Python 3.10+
 python --version
 
 # Configure your LLM provider (see supported providers)
@@ -58,20 +35,6 @@ crewaimaster providers --configure openai --api-key "your-openai-key" --model "g
 ```bash
 # Create an intelligent crew using AI analysis
 crewaimaster create "Write a comprehensive market analysis report for electric vehicles in 2024" --name electric_vehicles_market_analysis_crew
-
-# Output with AI orchestration:
-# 🤖 Using AI orchestration for intelligent crew creation
-# 📋 AI orchestration completed:
-#    Crew: electric_vehicles_market_analysis_crew
-#    Agents: 3
-#    Complexity: complex
-# ✅ AI-orchestrated crew created with ID: electric_vehicles_market_analysis_crew
-# 📊 Predicted performance: High accuracy with specialized research agents
-# 
-# 👥 Agents:
-# ├── MarketResearcher (Research Specialist) - Tools: web_search, document_search, data_processing
-# ├── DataAnalyst (Data Analysis Expert) - Tools: data_processing, api_calls, file_operations
-# └── ReportWriter (Technical Writer) - Tools: file_operations, web_search
 ```
 
 ### 2. Execute the Crew
@@ -82,15 +45,6 @@ crewaimaster run electric_vehicles_market_analysis_crew
 
 # With additional context:
 crewaimaster run electric_vehicles_market_analysis_crew --input "Focus on Tesla, BMW, and Volkswagen specifically"
-
-# Output:
-# 🏃 Running crew: electric_vehicles_market_analysis_crew
-# 📝 With additional context: Focus on Tesla, BMW, and Volkswagen specifically
-# 🔍 MarketResearcher executing web search for current data...
-# 📊 DataAnalyst processing market data and trends...
-# ✍️ ReportWriter compiling comprehensive analysis...
-# ✅ Crew execution completed in 45s!
-# 📄 Result: [Comprehensive 2024 EV market analysis with specific focus on requested companies...]
 ```
 
 ### 3. Alternative Execution (Direct Script)
@@ -103,14 +57,13 @@ cd crews/electric_vehicles_market_analysis_crew
 
 # Run using standard environment variables
 export OPENAI_API_KEY="your-openai-key"
-./run.sh
+./run.sh "your input"
 
 # Or run using CrewAIMaster-specific environment variables
 export CREWAIMASTER_LLM_PROVIDER="openai"
 export CREWAIMASTER_LLM_MODEL="gpt-4"
 export CREWAIMASTER_LLM_API_KEY="your-openai-key"
 export CREWAIMASTER_LLM_BASE_URL="https://api.openai.com/v1"
-python src/electric_vehicles_market_analysis_crew/main.py
 ```
 
 ## 🔄 Development Workflow
@@ -326,91 +279,6 @@ crewaimaster providers --configure deepseek --api-key "your-deepseek-key" --mode
 crewaimaster providers --configure custom --api-key "your-key" --base-url "https://api.example.com/v1" --model "gpt-4o-mini"
 # Requires explicit base_url for custom endpoints
 ```
-
-### 🔄 Configuration Management
-
-**View Current Config:**
-```bash
-crewaimaster providers  # Shows current provider settings and configuration examples
-```
-
-**Config File Location:** `.crewaimaster/config.yaml` (in current directory)
-
-
-#### Supported LLM Parameters
-
-All standard LLM parameters are supported in per-agent configuration:
-
-- **`model`** (string): Model name (e.g., "gpt-4", "claude-3-sonnet-20240229")
-- **`temperature`** (float): Creativity level (0.0 to 1.0)
-- **`max_tokens`** (int): Maximum response length
-- **`top_p`** (float): Nucleus sampling parameter
-- **`frequency_penalty`** (float): Penalty for frequent tokens
-- **`presence_penalty`** (float): Penalty for repeated topics
-- **`stop`** (list): Stop sequences to end generation
-- **`timeout`** (int): Request timeout in seconds
-- **`max_retries`** (int): Maximum retry attempts
-- **`api_key`** (string): Agent-specific API key
-- **`base_url`** (string): Agent-specific API endpoint
-- **`api_version`** (string): API version for specific providers
-- **`organization`** (string): Organization ID for OpenAI
-
-#### Environment Variable Override
-
-Generated crews support environment variable overrides with the following priority:
-
-1. **CrewAIMaster Environment Variables** (highest priority)
-   - `CREWAIMASTER_LLM_PROVIDER`
-   - `CREWAIMASTER_LLM_MODEL`
-   - `CREWAIMASTER_LLM_API_KEY`
-   - `CREWAIMASTER_LLM_BASE_URL`
-
-2. **Agent-Specific Configuration** (medium priority)
-   - Values from `config/agents.yaml`
-
-3. **Default Values** (lowest priority)
-   - Fallback defaults
-
-This allows for flexible deployment where you can override specific settings via environment variables while maintaining detailed per-agent configurations in your YAML files.
-
-### Environment Variables for Generated Crews
-
-**Important:** While CrewAIMaster CLI configuration doesn't use environment variables, the **generated crews** still support them for flexibility:
-
-#### Standard Provider Environment Variables
-```bash
-# Standard provider environment variables (for generated crews)
-export OPENAI_API_KEY="your-openai-key"
-export ANTHROPIC_API_KEY="your-anthropic-key"
-export GOOGLE_API_KEY="your-google-key"
-export DEEPSEEK_API_KEY="your-deepseek-key"
-```
-
-#### CrewAIMaster-Specific Environment Variables
-```bash
-# CrewAIMaster-specific environment variables (for generated crews)
-export CREWAIMASTER_LLM_PROVIDER="openai"          # Provider selection
-export CREWAIMASTER_LLM_MODEL="gpt-4"              # Model selection  
-export CREWAIMASTER_LLM_API_KEY="your-api-key"     # API key
-export CREWAIMASTER_LLM_BASE_URL="https://api.openai.com/v1"  # Base URL
-```
-
-#### Other Optional Environment Variables
-```bash
-# Web Search (optional)
-export SERPER_API_KEY="your-serper-key"
-
-```
-
-## 🛡️ Safety & Guardrails
-
-CrewAIMaster includes built-in safety measures:
-
-- **PII Detection**: Automatically detects and blocks personal information
-- **Toxicity Filtering**: Prevents harmful or offensive content
-- **Code Safety**: Scans for potentially dangerous code patterns
-- **Output Validation**: Ensures appropriate response length and quality
-- **Hallucination Detection**: Identifies potential AI hallucinations
 
 ## 🤝 Contributing
 

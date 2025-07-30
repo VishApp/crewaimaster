@@ -33,7 +33,7 @@ This project and everyone participating in it is governed by our Code of Conduct
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.10 or higher
 - Git
 - UV package manager (recommended) or pip
 
