@@ -52,9 +52,9 @@ def display_banner():
     """Display CrewAIMaster banner."""
     banner = """[bold cyan]
                                                                         
-[blink]╔═╗╦═╗╔═╗╦ ╦[/blink]  [bold blue]╔╦╗╔═╗╔═╗╔╦╗╔═╗╦═╗[/bold blue]                
-[blink]║  ╠╦╝║╣ ║║║[/blink]  [bold blue]║║║╠═╣╚═╗ ║ ║╣ ╠╦╝[/bold blue]                
-[blink]╚═╝╩╚═╚═╝╚╩╝[/blink]  [bold blue]╩ ╩╩ ╩╚═╝ ╩ ╚═╝╩╚═[/bold blue]                
+[blink]╔═╗╦═╗╔═╗╦ ╦[/blink]  [bold blue]╔═╗╦  ╔╦╗╔═╗╔═╗╔╦╗╔═╗╦═╗[/bold blue]                
+[blink]║  ╠╦╝║╣ ║║║[/blink]  [bold blue]╠═╣║  ║║║╠═╣╚═╗ ║ ║╣ ╠╦╝[/bold blue]                
+[blink]╚═╝╩╚═╚═╝╚╩╝[/blink]  [bold blue]╩ ╩╩  ╩ ╩╩ ╩╚═╝ ╩ ╚═╝╩╚═[/bold blue]                
                                                                         
 [bright_green]🤖 Build intelligent multi-agent systems[/bright_green]           
                                                                                                                          

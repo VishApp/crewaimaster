@@ -7,14 +7,35 @@ CrewAIMaster is an advanced framework that automatically generates, manages, and
 ## 📦 Installation
 
 ```bash
-# Install from source (recommended for development)
+# install from PyPI (when available)
+pip install crewaimaster
+
+# Or Install from source (recommended for development)
 git clone https://github.com/VishApp/crewaimaster
 cd crewaimaster
+python -m venv venv
+source venv/bin/activate
 pip install -e .
-
-# Or install from PyPI (when available)
-pip install crewaimaster
 ```
+
+## 🎬 Demo
+
+### 📹 Video Walkthrough
+[![CrewAIMaster Demo](docs/images/crewaimaster-welcome.png)](https://youtu.be/osF9oTBa9IU)
+
+*Click the image above to watch a complete walkthrough of CrewAIMaster in action*
+
+### 📸 Screenshots
+
+#### CLI Interface
+![CLI Interface](docs/images/crewaimaster-welcome.png)
+
+#### CrewAIMaster Providers
+![Crew Creation](docs/images/crewaimaster-providers.png)
+
+#### CrewAIMaster Help
+![Execution Dashboard](docs/images/crewaimaster-help.png)
+
 
 ## 🏃 Quick Start
 

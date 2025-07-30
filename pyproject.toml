@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crewaimaster"
-version = "0.1.0"
+version = "0.1.2"
 description = "A Python package for building intelligent multi-agent systems using CrewAI"
 readme = "README.md"
 authors = [
@@ -25,7 +25,7 @@ keywords = ["ai", "multi-agent", "crewai", "automation", "agents"]
 requires-python = ">=3.10"
 dependencies = [
     "crewai",
-    "crewai-tools==0.58.0",
+    "crewai-tools",
     "pydantic",
     "python-dotenv",
     "rich",
